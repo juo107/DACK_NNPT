@@ -1,0 +1,35 @@
+import axiosInstance from './axiosInstance';
+
+const productApi = {
+  // Lấy tất cả sản phẩm
+  getAll: (params) => {
+    const url = '/products';
+    return axiosInstance.get(url, { params });
+  },
+
+  // Lấy chi tiết sản phẩm theo ID
+  getById: (id) => {
+    const url = `/products/${id}`;
+    return axiosInstance.get(url);
+  },
+
+  // Thêm mới sản phẩm
+  add: (data) => {
+    const url = '/products';
+    return axiosInstance.post(url, data);
+  },
+
+  // Cập nhật sản phẩm
+  update: (id, data) => {
+    const url = `/products/${id}`;
+    return axiosInstance.put(url, data);
+  },
+
+  // Xóa sản phẩm
+  delete: (id) => {
+    const url = `/products/${id}`;
+    return axiosInstance.delete(url);
+  },
+};
+
+export default productApi;
