@@ -3,12 +3,19 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var cors = require('cors');
 let mongoose = require('mongoose')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
 var app = express();
+
+// Configure CORS
+app.use(cors({
+  origin: 'http://localhost:5173', // Địa chỉ của Frontend
+  credentials: true                // Cho phép gửi/nhận cookie
+}));
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
