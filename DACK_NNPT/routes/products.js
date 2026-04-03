@@ -7,9 +7,17 @@ let mongoose = require('mongoose')
 
 /* GET users listing. */
 router.get('/', async function (req, res, next) {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+
   let queries = req.query;
-  let minPrice = queries.minprice ? queries.minprice : 0;
-  let maxPrice = queries.maxprice ? queries.maxprice : 10000;
+  let minPrice = queries.minprice !== undefined ? Number(queries.minprice) : 0;
+  let maxPrice = queries.maxprice !== undefined ? Number(queries.maxprice) : Number.MAX_SAFE_INTEGER;
+
+  if (Number.isNaN(minPrice)) minPrice = 0;
+  if (Number.isNaN(maxPrice)) maxPrice = Number.MAX_SAFE_INTEGER;
+
   let titleQ = queries.title ? queries.title : '';
   let result = await productModel.find({
     isDeleted: false,
