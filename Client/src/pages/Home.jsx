@@ -1,25 +1,48 @@
 import React from 'react';
+import Hero from '../components/home/Hero';
+import FeaturedProducts from '../components/home/FeaturedProducts';
 
 const Home = () => {
   return (
-    <section className="hero" style={{ padding: '8rem 0', textAlign: 'center' }}>
-      <div className="container">
-        <h1 style={{ fontSize: '4rem', marginBottom: '1.5rem', background: 'linear-gradient(to right, var(--primary), var(--secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          Welcome to Your New Project
-        </h1>
-        <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto 3rem auto' }}>
-          Đây là cấu trúc thư mục React cơ bản dành cho người mới bắt đầu. 
-          Mọi thứ đã được thiết lập sẵn sàng để bạn phát triển ý tưởng của mình.
-        </p>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-          <button className="btn-primary" style={{ padding: '1rem 2rem' }}>Get Started</button>
-          <button style={{ padding: '1rem 2rem', color: 'var(--text-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontWeight: '600' }}>
-            Learn More
-          </button>
-        </div>
+    <main className="min-h-screen bg-[#e3e6e6] overflow-x-hidden pb-12">
+      {/* Hero Section with Amazon Style Carousel & Cards */}
+      <Hero />
+
+      {/* Featured Products Section - Now on Gray Background */}
+      <div className="container mx-auto px-4">
+        <FeaturedProducts />
       </div>
-    </section>
+
+      {/* Trust Badges - Styled to fit Amazon theme */}
+      <section className="py-12 bg-white mt-12 border-t border-gray-200">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="flex flex-col items-center text-center group">
+              <div className="text-3xl mb-3 transition-transform group-hover:scale-110">🚚</div>
+              <h4 className="font-bold text-gray-900">Giao hàng miễn phí</h4>
+              <p className="text-xs text-gray-500 uppercase tracking-widest mt-1">Cho đơn từ 500k</p>
+            </div>
+            <div className="flex flex-col items-center text-center group">
+              <div className="text-3xl mb-3 transition-transform group-hover:scale-110">🔄</div>
+              <h4 className="font-bold text-gray-900">Đổi trả 30 ngày</h4>
+              <p className="text-xs text-gray-500 uppercase tracking-widest mt-1">Dễ dàng, nhanh chóng</p>
+            </div>
+            <div className="flex flex-col items-center text-center group">
+              <div className="text-3xl mb-3 transition-transform group-hover:scale-110">🛡️</div>
+              <h4 className="font-bold text-gray-900">Bảo mật thanh toán</h4>
+              <p className="text-xs text-gray-500 uppercase tracking-widest mt-1">100% An toàn</p>
+            </div>
+            <div className="flex flex-col items-center text-center group">
+              <div className="text-3xl mb-3 transition-transform group-hover:scale-110">💬</div>
+              <h4 className="font-bold text-gray-900">Hỗ trợ 24/7</h4>
+              <p className="text-xs text-gray-500 uppercase tracking-widest mt-1">Tận tâm, chu đáo</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 };
 
 export default Home;
+

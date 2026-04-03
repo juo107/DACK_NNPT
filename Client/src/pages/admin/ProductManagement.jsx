@@ -87,7 +87,7 @@ const ProductManagement = () => {
   ];
 
   return (
-    <div className="product-management">
+    <div className="product-management container mx-auto p-6">
       <AdminTable 
         title="Quản lý Sản phẩm"
         columns={productColumns}
