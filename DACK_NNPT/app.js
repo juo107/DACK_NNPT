@@ -50,7 +50,7 @@ app.use('/api/v1/upload', require('./routes/upload'));
 app.use('/api/v1/messages', require('./routes/messages'));
 app.use('/api/v1/inventories', require('./routes/inventories'));
 app.use('/api/v1/reservations', require('./routes/reservation'));
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/NNPTUD-C3';
+const MONGO_URI = 'mongodb://admin:123456@localhost:27017/NNPTUD-C3?authSource=admin';
 mongoose.connect(MONGO_URI);
 // Đăng ký model để Mongoose tạo index / dùng được collection wishlists, wishlistitems
 require('./schemas/wishlists');
