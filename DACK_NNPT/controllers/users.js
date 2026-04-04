@@ -66,7 +66,7 @@ module.exports = {
         let user = await userModel.findOne({
             username: username,
             isDeleted: false
-        })
+        }).populate('role')
         if (user) {
             if (user.lockTime && user.lockTime > Date.now()) {
                 return false;

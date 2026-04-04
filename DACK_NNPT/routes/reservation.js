@@ -4,7 +4,7 @@ let mongoose = require('mongoose');
 let reservationModel = require('../schemas/reservation');
 let inventoryModel = require('../schemas/inventories');
 let productModel = require('../schemas/products');
-let { CheckLogin } = require('../utils/authHandler');
+let { CheckLogin, checkRole } = require('../utils/authHandler');
 
 // POST: Tạo đơn đặt hàng mới (Giao dịch thủ công - Không cần Replica Set)
 router.post('/', CheckLogin, async function (req, res) {
@@ -104,6 +104,49 @@ router.get('/', CheckLogin, async function (req, res) {
             .populate('items.product')
             .sort({ createdAt: -1 });
         res.send(reservations);
+    } catch (error) {
+        res.status(500).send({ message: error.message });
+    }
+});
+
+// --- ADMIN ROUTES ---
+
+// GET: Lấy TẤT CẢ đơn đặt hàng (Admin)
+router.get('/admin/all', CheckLogin, checkRole('admin'), async function (req, res) {
+    try {
+        const reservations = await reservationModel.find()
+            .populate('user', 'username email')
+            .populate('items.product')
+            .sort({ createdAt: -1 });
+        res.send(reservations);
+    } catch (error) {
+        res.status(500).send({ message: error.message });
+    }
+});
+
+// PUT: Cập nhật trạng thái đơn (Admin)
+router.put('/admin/status/:id', CheckLogin, checkRole('admin'), async function (req, res) {
+    try {
+        const { status } = req.body;
+        const reservation = await reservationModel.findByIdAndUpdate(
+            req.params.id,
+            { status: status },
+            { new: true }
+        ).populate('user', 'username email').populate('items.product');
+        
+        if (!reservation) return res.status(404).send({ message: "Không tìm thấy đơn hàng" });
+        res.send(reservation);
+    } catch (error) {
+        res.status(500).send({ message: error.message });
+    }
+});
+
+// DELETE: Xóa đơn hàng (Admin)
+router.delete('/admin/:id', CheckLogin, checkRole('admin'), async function (req, res) {
+    try {
+        const result = await reservationModel.findByIdAndDelete(req.params.id);
+        if (!result) return res.status(404).send({ message: "Không tìm thấy đơn hàng" });
+        res.send({ message: "Xóa thành công", id: req.params.id });
     } catch (error) {
         res.status(500).send({ message: error.message });
     }

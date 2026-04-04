@@ -178,7 +178,8 @@ router.post('/', async function (req, res, next) {
       price: req.body.price,
       description: req.body.description,
       category: req.body.category,
-      images: req.body.images
+      images: req.body.images,
+      status: req.body.status
     });
     newProduct = await newProduct.save({ session });
     let newInventory = new inventoryModel({
@@ -197,28 +198,16 @@ router.post('/', async function (req, res, next) {
 })
 router.put('/:id', async function (req, res, next) {
   try {
-    let id = req.params.id;
-    //c1
-    // let result = await productModel.findOne({
-    //   isDeleted: false,
-    //   _id: id
-    // })
-    // if (result) {
-    //   let keys = Object.keys(req.body);
-    //   for (const key of keys) {
-    //     result[key] = req.body[key]
-    //   }
-    //   await result.save()
-    //   res.send(result)
-    // }
-    // else {
-    //   res.status(404).send({ message: "ID NOT FOUND" });
-    // }
-    //c2
-    let updatedItem = await productModel.findByIdAndUpdate(id, req.body, {
-      new: true
-    });
-    res.send(updatedItem)
+    const id = req.params.id;
+    const updateData = { ...req.body };
+    delete updateData._id;
+
+    if (updateData.title) {
+        updateData.slug = slugify(updateData.title, { lower: true });
+    }
+
+    const updatedItem = await productModel.findByIdAndUpdate(id, updateData, { new: true });
+    res.send(updatedItem);
   } catch (error) {
     res.status(404).send({ message: error.message });
   }
