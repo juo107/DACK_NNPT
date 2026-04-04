@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Input, Select, Slider } from 'antd';
 import { ChevronDown, Search, ShoppingBag, SlidersHorizontal, X } from 'lucide-react';
 
@@ -16,13 +16,22 @@ const ProductFilters = ({
   onApply,
   onReset,
 }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const onChange = () => setOpen(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   const priceFmt = (n) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:rounded-3xl">
+    <section className="product-filters overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:rounded-3xl">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -36,7 +45,14 @@ const ProductFilters = ({
           <span className="min-w-0">
             <span className="block text-base font-black text-slate-900 sm:text-lg">Bộ lọc sản phẩm</span>
             <span className="block text-xs text-slate-500 sm:text-sm">
-              {open ? 'Thu gọn' : 'Nhấn để mở tìm kiếm và lọc'}
+              {open ? (
+                'Thu gọn bộ lọc'
+              ) : (
+                <>
+                  <span className="lg:hidden">Nhấn để mở tìm kiếm và lọc</span>
+                  <span className="hidden lg:inline">Nhấn để mở</span>
+                </>
+              )}
             </span>
           </span>
         </span>
@@ -52,7 +68,7 @@ const ProductFilters = ({
         <div className="min-h-0 overflow-hidden">
           <div className="border-t border-slate-100">
             <div className="bg-gradient-to-br from-slate-50 to-white px-4 py-4 sm:px-5 sm:py-4">
-              <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3">
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3 lg:flex-col lg:items-stretch">
                 <Input
                   prefix={<Search className="h-4 w-4 text-slate-400" />}
                   value={searchTerm}
@@ -62,11 +78,11 @@ const ProductFilters = ({
                   className="!h-10 !rounded-xl sm:!h-11 sm:flex-1"
                   onPressEnter={onApply}
                 />
-                <div className="flex shrink-0 gap-2">
+                <div className="flex shrink-0 gap-2 sm:flex-row lg:w-full">
                   <Button
                     type="primary"
                     icon={<ShoppingBag className="h-4 w-4" />}
-                    className="!h-10 !flex-1 !rounded-xl !bg-slate-900 !px-4 !font-bold hover:!bg-primary sm:!h-11 sm:!flex-none sm:!px-5"
+                    className="!h-10 !flex-1 !rounded-xl !bg-slate-900 !px-4 !font-bold hover:!bg-primary sm:!h-11 sm:!flex-none sm:!px-5 lg:!flex-1"
                     onClick={onApply}
                   >
                     Áp dụng
@@ -74,7 +90,7 @@ const ProductFilters = ({
                   <Button
                     type="default"
                     icon={<X className="h-4 w-4" />}
-                    className="!h-10 !rounded-xl sm:!h-11"
+                    className="!h-10 !rounded-xl sm:!h-11 lg:!shrink-0"
                     onClick={onReset}
                     title="Xóa bộ lọc"
                   />
@@ -82,7 +98,7 @@ const ProductFilters = ({
               </div>
             </div>
 
-            <div className="grid gap-4 p-4 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3 sm:p-5">
+            <div className="grid gap-4 p-4 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3 sm:p-5 lg:grid-cols-1">
               <div className="min-w-0">
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500">
                   Danh mục

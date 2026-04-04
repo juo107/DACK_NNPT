@@ -7,3 +7,9 @@
 main {
   flex: 1;
 }
+
+/* ProductFilters: Ant Design Select (showSearch) — bỏ left/top 0px để căng hàng với nội dung (theo chỉnh preview) */
+.product-filters .ant-select .ant-select-input {
+  left: unset;
+  top: unset;
+}
