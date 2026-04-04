@@ -6,6 +6,7 @@ let { CheckLogin } = require('../utils/authHandler')
 let crypto = require('crypto')
 let { sendMail } = require('../utils/sendMail')
 let cartModel = require('../schemas/carts')
+let wishlistModel = require('../schemas/wishlists')
 let mongoose = require('mongoose')
 //login
 router.post('/login', async function (req, res, next) {
@@ -34,6 +35,10 @@ router.post('/register', RegisterValidator, validatedResult, async function (req
             user: newUser._id
         })
         newCart = await newCart.save({ session })
+        let newWishlist = new wishlistModel({
+            user: newUser._id
+        })
+        await newWishlist.save({ session })
         newCart = await newCart.populate('user')
         await session.commitTransaction()
         await session.endSession()

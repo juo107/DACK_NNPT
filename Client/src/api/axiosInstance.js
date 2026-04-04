@@ -1,7 +1,10 @@
 import axios from 'axios';
 
-// Cấu hình URL cơ sở cho API của bạn
-const BASE_URL = 'http://localhost:3000/api/v1';
+// Dev: qua proxy Vite (/api -> localhost:3000) để tránh CORS + withCredentials.
+// Build: đặt VITE_API_BASE=http://localhost:3000/api/v1 (hoặc URL server thật).
+const BASE_URL =
+  import.meta.env.VITE_API_BASE ||
+  (import.meta.env.DEV ? '/api/v1' : 'http://localhost:3000/api/v1');
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,

@@ -12,10 +12,21 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
-// Configure CORS
+// CORS: dev cho localhost/127.0.0.1 mọi cổng (Vite đổi port hoặc mở bằng 127.0.0.1).
+// Production: đặt FRONTEND_ORIGIN (một origin cụ thể).
 app.use(cors({
-  origin: 'http://localhost:5173', // Địa chỉ của Frontend
-  credentials: true                // Cho phép gửi/nhận cookie
+  credentials: true,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (process.env.NODE_ENV === 'production') {
+      const allowed = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
+      return callback(null, origin === allowed ? origin : false);
+    }
+    if (/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
+      return callback(null, origin);
+    }
+    callback(null, false);
+  },
 }));
 
 // view engine setup
@@ -39,6 +50,9 @@ app.use('/api/v1/upload', require('./routes/upload'));
 app.use('/api/v1/messages', require('./routes/messages'));
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/NNPTUD-C3';
 mongoose.connect(MONGO_URI);
+// Đăng ký model để Mongoose tạo index / dùng được collection wishlists, wishlistitems
+require('./schemas/wishlists');
+require('./schemas/wishlistItems');
 mongoose.connection.on('connected',()=>{
   console.log("connected");
 })
