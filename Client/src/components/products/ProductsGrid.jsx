@@ -45,13 +45,14 @@ const ProductsGrid = ({
         <>
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {products.map((product) => (
-              <ProductCard
-                key={product._id}
-                product={product}
-                formatCurrency={formatCurrency}
-                getImageUrl={getImageUrl}
-                onSelectProduct={onSelectProduct}
-              />
+              <div key={product._id} className="min-h-0 h-full">
+                <ProductCard
+                  product={product}
+                  formatCurrency={formatCurrency}
+                  getImageUrl={getImageUrl}
+                  onSelectProduct={onSelectProduct}
+                />
+              </div>
             ))}
           </div>
 

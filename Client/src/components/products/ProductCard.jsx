@@ -1,14 +1,18 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-import { Button, Tag } from 'antd';
+import { Link, useNavigate } from 'react-router-dom';
+import { Tag } from 'antd';
 import { Heart, Search, ShoppingBag, Star } from 'lucide-react';
+import useCart from '../../hooks/useCart';
+import useWishlist from '../../hooks/useWishlist';
 
 const ProductCard = ({ product, formatCurrency, getImageUrl, onSelectProduct }) => {
   const navigate = useNavigate();
+  const { addItem } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const imageUrl = getImageUrl(product);
   const categoryName = product?.category?.name || 'Chưa phân loại';
   const detailPath = `/products/${product?._id}`;
+  const inWishlist = product?._id ? isInWishlist(product._id) : false;
 
   const openDetail = () => {
     if (product?._id) {
@@ -21,8 +25,32 @@ const ProductCard = ({ product, formatCurrency, getImageUrl, onSelectProduct }) 
     }
   };
 
+  const handleWishlistClick = async (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    if (!product?._id) return;
+    await toggleWishlist(product._id);
+  };
+
+  const handleAddToCartClick = async (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    if (!product?._id) return;
+    await addItem(product, 1);
+  };
+
+  const handleQuickViewClick = (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    if (onSelectProduct) {
+      onSelectProduct(product);
+    } else {
+      openDetail();
+    }
+  };
+
   return (
-    <article className="group overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
+    <article className="group flex h-full flex-col rounded-[2rem] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
       <div
         onClick={openDetail}
         className="block w-full text-left"
@@ -35,7 +63,7 @@ const ProductCard = ({ product, formatCurrency, getImageUrl, onSelectProduct }) 
           }
         }}
       >
-        <div className="relative aspect-[4/5] overflow-hidden bg-slate-100">
+        <div className="relative aspect-[4/5] shrink-0 overflow-hidden rounded-t-[2rem] bg-slate-100">
           <img
             src={imageUrl}
             alt={product?.title}
@@ -56,23 +84,55 @@ const ProductCard = ({ product, formatCurrency, getImageUrl, onSelectProduct }) 
             )}
           </div>
 
-          <div className="absolute inset-x-0 bottom-0 flex translate-y-full items-center justify-center gap-3 bg-gradient-to-t from-slate-950/80 to-transparent p-5 transition-transform duration-300 group-hover:translate-y-0">
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg">
-              <Heart className="h-4 w-4" />
-            </span>
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary text-white shadow-lg">
+          <div
+            className="absolute inset-x-0 bottom-0 z-10 flex translate-y-full items-center justify-center gap-3 bg-gradient-to-t from-slate-950/80 to-transparent p-5 transition-transform duration-300 group-hover:translate-y-0"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="presentation"
+          >
+            <button
+              type="button"
+              aria-label={inWishlist ? 'Bỏ yêu thích' : 'Thêm yêu thích'}
+              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-white text-slate-900 shadow-lg transition-transform hover:scale-105"
+              onClick={handleWishlistClick}
+            >
+              <Heart
+                className={`h-4 w-4 ${inWishlist ? 'fill-rose-500 text-rose-500' : ''}`}
+              />
+            </button>
+            <button
+              type="button"
+              aria-label="Thêm vào giỏ hàng"
+              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-105"
+              onClick={handleAddToCartClick}
+            >
               <ShoppingBag className="h-4 w-4" />
-            </span>
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg">
+            </button>
+            <button
+              type="button"
+              aria-label={onSelectProduct ? 'Xem nhanh' : 'Xem chi tiết'}
+              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-white text-slate-900 shadow-lg transition-transform hover:scale-105"
+              onClick={handleQuickViewClick}
+            >
               <Search className="h-4 w-4" />
-            </span>
+            </button>
           </div>
         </div>
 
-        <div className="space-y-4 p-5">
+        <div className="flex min-h-0 flex-1 flex-col space-y-4 p-5 pb-6">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="line-clamp-2 text-lg font-bold leading-snug text-slate-900 group-hover:text-primary">
-              {product?.title}
+            <h3 className="line-clamp-2 min-w-0 text-lg font-bold leading-snug">
+              {product?._id ? (
+                <Link
+                  to={detailPath}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-slate-900 transition-colors hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  {product?.title}
+                </Link>
+              ) : (
+                <span className="text-slate-900">{product?.title}</span>
+              )}
             </h3>
             <div className="flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
               <Star className="h-3 w-3 fill-current" /> 5.0
@@ -83,33 +143,15 @@ const ProductCard = ({ product, formatCurrency, getImageUrl, onSelectProduct }) 
             {product?.description || 'Chưa có mô tả cho sản phẩm này.'}
           </p>
 
-          <div className="flex items-end justify-between gap-3 border-t border-slate-100 pt-4">
-            <div>
+          <div className="mt-auto border-t border-slate-100 pt-5">
+            <div className="min-w-0">
               <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Giá bán</div>
-              <div className="mt-1 text-2xl font-black text-slate-900">{formatCurrency(product?.price)}</div>
+              <div className="mt-1 break-words text-xl font-black text-slate-900 sm:text-2xl">
+                {formatCurrency(product?.price)}
+              </div>
             </div>
-            <Button
-              type="primary"
-              className="!h-11 !rounded-full !bg-slate-900 !px-5 !font-bold hover:!bg-primary"
-              onClick={(event) => {
-                event.stopPropagation();
-                openDetail();
-              }}
-            >
-              Xem chi tiết
-            </Button>
           </div>
         </div>
-      </div>
-
-      <div className="px-5 pb-5 -mt-2">
-        <Link
-          to={detailPath}
-          className="text-sm font-semibold text-primary hover:underline"
-          onClick={(event) => event.stopPropagation()}
-        >
-          Xem trang chi tiết
-        </Link>
       </div>
     </article>
   );
