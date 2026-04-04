@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Dropdown, Menu, Avatar, Space, message, Badge } from 'antd';
 import { UserOutlined, LogoutOutlined, DownOutlined, SearchOutlined, ShoppingCartOutlined } from '@ant-design/icons';
-import { Search, ShoppingBag, User, Menu as MenuIcon, X } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu as MenuIcon, X, Heart } from 'lucide-react';
 import AuthModal from './AuthModal';
 import useCart from '../hooks/useCart';
+import useWishlist from '../hooks/useWishlist';
 
 /**
  * Component: Header
@@ -21,6 +22,8 @@ const Header = () => {
   // -- Hooks --
   const { items } = useCart();
   const cartCount = items.length;
+  const { items: wishlistItems, isGuest: wishlistGuest } = useWishlist();
+  const wishlistCount = wishlistGuest ? 0 : wishlistItems.length;
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -46,6 +49,7 @@ const Header = () => {
 
   const userMenuItems = [
     { key: 'profile', label: 'Thông tin cá nhân', icon: <UserOutlined /> },
+    { key: 'wishlist', label: <Link to="/wishlist">Yêu thích</Link>, icon: <Heart className="w-4 h-4" /> },
     { key: 'myOrders', label: <Link to="/my-orders">Đơn mua của tôi</Link>, icon: <ShoppingBag className="w-4 h-4" /> },
     { key: 'admin', label: <Link to="/admin/products">Quản trị</Link>, icon: <DownOutlined /> },
     { key: 'logout', label: 'Đăng xuất', icon: <LogoutOutlined />, danger: true, onClick: handleLogout },
@@ -107,6 +111,12 @@ const Header = () => {
               <Search className="w-5 h-5" />
             </button>
             
+            <Link to="/wishlist" className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors relative group" title="Yêu thích">
+              <Badge count={wishlistCount} offset={[5, -5]} size="small" color="magenta" className="font-bold" showZero={false}>
+                <Heart className={`w-6 h-6 transition-colors ${wishlistCount > 0 ? 'text-rose-500 fill-rose-500' : 'group-hover:text-rose-400'}`} />
+              </Badge>
+            </Link>
+
             <Link to="/cart" className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors relative group">
               <Badge count={cartCount} offset={[5, -5]} size="small" color="orange" className="font-bold">
                 <ShoppingBag className="w-6 h-6 group-hover:text-primary transition-colors" />
@@ -149,6 +159,7 @@ const Header = () => {
         <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b border-gray-100 shadow-xl py-4 flex flex-col space-y-4 px-6 animate-in slide-in-from-top-4 duration-300">
           <Link to="/" className="text-lg font-semibold py-2 border-b border-gray-50" onClick={() => setIsMobileMenuOpen(false)}>Trang chủ</Link>
           <Link to="/products" className="text-lg font-semibold py-2 border-b border-gray-50" onClick={() => setIsMobileMenuOpen(false)}>Sản phẩm</Link>
+          <Link to="/wishlist" className="text-lg font-semibold py-2 border-b border-gray-50" onClick={() => setIsMobileMenuOpen(false)}>Yêu thích</Link>
           <Link to="/news" className="text-lg font-semibold py-2 border-b border-gray-50" onClick={() => setIsMobileMenuOpen(false)}>Tin tức</Link>
           <Link to="/contact" className="text-lg font-semibold py-2 border-b border-gray-50" onClick={() => setIsMobileMenuOpen(false)}>Liên hệ</Link>
         </div>

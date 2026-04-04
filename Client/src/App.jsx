@@ -13,10 +13,13 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 
 import { CartProvider } from './context/CartContext';
+import { WishlistProvider } from './context/WishlistContext';
+import Wishlist from './pages/Wishlist';
 
 function App() {
   return (
     <Router>
+      <WishlistProvider>
       <CartProvider>
         <div className="app">
         <Header />
@@ -31,6 +34,7 @@ function App() {
             
             {/* Giỏ hàng */}
             <Route path="/cart" element={<Cart />} />
+            <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/checkout" element={<Checkout />} />
 
             {/* Đơn mua */}
@@ -45,6 +49,7 @@ function App() {
         <Footer />
         </div>
       </CartProvider>
+      </WishlistProvider>
     </Router>
   );
 }

@@ -4,6 +4,7 @@ import { Alert, Button, Empty, Skeleton, Tag, message } from 'antd';
 import { ArrowLeft, Heart, ShoppingBag, Star, CreditCard } from 'lucide-react';
 import useProductDetail from '../hooks/useProductDetail';
 import useCart from '../hooks/useCart';
+import useWishlist from '../hooks/useWishlist';
 import { formatCurrency, getImageUrl } from '../utils/productHelpers';
 import reservationApi from '../api/reservationApi';
 
@@ -17,6 +18,7 @@ const ProductDetail = () => {
     const navigate = useNavigate();
     const [buying, setBuying] = useState(false);
     const [adding, setAdding] = useState(false);
+    const [wishBusy, setWishBusy] = useState(false);
 
     // -- Hooks --
     const {
@@ -38,6 +40,9 @@ const ProductDetail = () => {
     } = useProductDetail(id);
 
     const { addItem, isGuest } = useCart();
+    const { isInWishlist, toggleWishlist, isGuest: wishGuest } = useWishlist();
+
+    const inWishlist = product?._id ? isInWishlist(product._id) : false;
 
     // -- Handlers --
     const handleAddToCart = async () => {
@@ -45,6 +50,21 @@ const ProductDetail = () => {
         setAdding(true);
         await addItem(product, quantity);
         setAdding(false);
+    };
+
+    const handleWishlist = async () => {
+        if (!product?._id) return;
+        if (wishGuest) {
+            message.warning('Vui lòng đăng nhập để lưu yêu thích');
+            window.dispatchEvent(new Event('openAuthModal'));
+            return;
+        }
+        setWishBusy(true);
+        try {
+            await toggleWishlist(product._id);
+        } finally {
+            setWishBusy(false);
+        }
     };
 
     const handleBuyNow = async () => {
@@ -223,8 +243,22 @@ const ProductDetail = () => {
                         </div>
                         
                         <div className="mt-6 flex justify-center">
-                            <Button type="text" className="h-10 text-slate-400 hover:text-rose-500 font-bold transition-colors" icon={<Heart className="h-4 w-4" />}>
-                                Wishlist
+                            <Button
+                                type="text"
+                                loading={wishBusy}
+                                onClick={handleWishlist}
+                                className={`h-10 font-bold transition-colors ${
+                                    inWishlist
+                                        ? '!text-rose-500'
+                                        : 'text-slate-400 hover:text-rose-500'
+                                }`}
+                                icon={
+                                    <Heart
+                                        className={`h-4 w-4 ${inWishlist ? 'fill-rose-500 text-rose-500' : ''}`}
+                                    />
+                                }
+                            >
+                                {inWishlist ? 'Đã lưu yêu thích' : 'Thêm vào yêu thích'}
                             </Button>
                         </div>
                     </div>
