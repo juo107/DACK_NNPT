@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Table, Button, Space, message, Popconfirm, Typography } from 'antd';
 import { SyncOutlined, PlusOutlined } from '@ant-design/icons';
 
@@ -6,17 +6,13 @@ const { Title } = Typography;
 
 /**
  * Generic Table Component
- * @param {string} title - Tiêu đề bảng
- * @param {array} columns - Cấu hình các cột (Ant Design columns)
- * @param {object} apiService - Đối tượng chứa các hàm getAll và delete
- * @param {string} rowKey - Khóa chính của mỗi dòng (mặc định: _id)
  */
-const AdminTable = ({ title, columns, apiService, rowKey = '_id' }) => {
+const AdminTable = ({ title, columns, apiService, rowKey = '_id', onAdd, onRef }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Hàm lấy dữ liệu chung
-  const fetchData = async () => {
+  // Hàm lấy dữ liệu chung - Dùng useCallback để tránh render loop
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const response = await apiService.getAll();
@@ -26,13 +22,20 @@ const AdminTable = ({ title, columns, apiService, rowKey = '_id' }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiService, title]);
+
+  // Để trang cha có thể gọi reload() - Chỉ gọi một lần khi mount hoặc khi fetchData đổi
+  useEffect(() => {
+    if (onRef) {
+      onRef({ reload: fetchData });
+    }
+  }, [onRef, fetchData]);
 
   useEffect(() => {
     if (apiService) {
       fetchData();
     }
-  }, [apiService]);
+  }, [apiService, fetchData]);
 
   // Hàm xóa dữ liệu chung
   const handleDelete = async (id) => {
@@ -69,7 +72,13 @@ const AdminTable = ({ title, columns, apiService, rowKey = '_id' }) => {
           >
             Làm mới
           </Button>
-          <Button type="primary" icon={<PlusOutlined />}>Thêm mới</Button>
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />}
+            onClick={onAdd}
+          >
+            Thêm mới
+          </Button>
         </Space>
       </div>
       

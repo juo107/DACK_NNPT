@@ -28,6 +28,26 @@ const reservationApi = {
   pay: (id) => {
     const url = `/reservations/paid/${id}`;
     return axiosInstance.put(url);
+  },
+
+  // --- ADMIN METHODS ---
+  
+  // Get all reservations (Admin)
+  getAllAdmin: () => {
+    const url = '/reservations/admin/all';
+    return axiosInstance.get(url);
+  },
+
+  // Update status (Admin)
+  updateStatusAdmin: (id, status) => {
+    const url = `/reservations/admin/status/${id}`;
+    return axiosInstance.put(url, { status });
+  },
+
+  // Delete reservation (Admin)
+  deleteAdmin: (id) => {
+    const url = `/reservations/admin/${id}`;
+    return axiosInstance.delete(url);
   }
 };
 

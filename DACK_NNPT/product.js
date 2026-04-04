@@ -1,8 +1,11 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const categoryModel = require('./schemas/categories');
 const productModel = require('./schemas/products');
+const roleModel = require('./schemas/roles');
+const userModel = require('./schemas/users');
+const inventoryModel = require('./schemas/inventories');
 
-const mongoUrl = 'mongodb://admin:123456@localhost:27017/NNPTUD-C3?authSource=admin';
+const mongoUrl = 'mongodb://localhost:27017/NNPTUD-C3';
 const USD_TO_VND = 26000;
 
 const categories = [
@@ -302,6 +305,45 @@ const toVnd = (usdPrice) => Math.round(Number(usdPrice || 0) * USD_TO_VND);
 async function main() {
   await mongoose.connect(mongoUrl);
 
+  // 1. KHỞI TẠO QUYỀN (ROLES)
+  console.log('Seeding roles...');
+  const adminRole = await roleModel.findOneAndUpdate(
+    { name: 'admin' },
+    { $set: { name: 'admin', description: 'Administrator with full access' } },
+    { upsert: true, returnDocument: 'after' }
+  );
+
+  const memberRole = await roleModel.findOneAndUpdate(
+    { name: 'member' },
+    { $set: { name: 'member', description: 'Regular customer' } },
+    { upsert: true, returnDocument: 'after' }
+  );
+
+  // 2. KHỞI TẠO TÀI KHOẢN ADMIN MẶC ĐỊNH
+  console.log('Seeding admin user...');
+  let adminUser = await userModel.findOne({ username: 'admin' });
+
+  if (!adminUser) {
+    adminUser = new userModel({
+      username: 'admin',
+      email: 'admin@gmail.com',
+      fullName: 'System Administrator',
+      role: adminRole._id,
+      status: true
+    });
+  }
+
+  adminUser.password = 'admin123'; // Trigger pre('save') hook in users.js
+  adminUser.role = adminRole._id;
+  adminUser.status = true;
+  adminUser.isDeleted = false;
+  adminUser.loginCount = 0;   // Reset login attempts
+  adminUser.lockTime = null;  // Unlock account
+  
+  await adminUser.save();
+  console.log('Admin user seeded and unlocked successfully.');
+
+  // 3. KHỞI TẠO DANH MỤC
   const categoryDocs = [];
   for (const item of categories) {
     const doc = await categoryModel.findOneAndUpdate(
@@ -353,6 +395,10 @@ async function main() {
   console.log(
     `Seeded ${categoryDocs.length} categories, ${insertedProducts.length} products, and initialized inventories. (rate: 1 USD = ${USD_TO_VND} VND)`
   );
+  console.log('--- ADMIN ACCOUNT CREATED ---');
+  console.log('Username: admin');
+  console.log('Password: admin123');
+  console.log('-----------------------------');
 
   await mongoose.disconnect();
 }
