@@ -1,8 +1,9 @@
-﻿const mongoose = require('mongoose');
+﻿require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+const mongoose = require('mongoose');
 const categoryModel = require('./schemas/categories');
 const productModel = require('./schemas/products');
 
-const mongoUrl = 'mongodb://localhost:27017/NNPTUD-C3';
+const mongoUrl = process.env.MONGO_URI || 'mongodb://localhost:27017/NNPTUD-C3';
 const USD_TO_VND = 26000;
 
 const categories = [

@@ -1,3 +1,4 @@
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -36,7 +37,8 @@ app.use('/api/v1/auth', require('./routes/auth'));
 app.use('/api/v1/carts', require('./routes/carts'));
 app.use('/api/v1/upload', require('./routes/upload'));
 app.use('/api/v1/messages', require('./routes/messages'));
-mongoose.connect('mongodb://localhost:27017/NNPTUD-C3');
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/NNPTUD-C3';
+mongoose.connect(MONGO_URI);
 mongoose.connection.on('connected',()=>{
   console.log("connected");
 })
