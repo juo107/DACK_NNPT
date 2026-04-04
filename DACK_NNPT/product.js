@@ -338,8 +338,21 @@ async function main() {
 
   const insertedProducts = await productModel.insertMany(productDocs);
 
+  // 4. KHỞI TẠO TỒN KHO CHO SẢN PHẨM MỚI
+  const inventoryModel = require('./schemas/inventories');
+  const inventoryDocs = insertedProducts.map((p) => ({
+    product: p._id,
+    stock: 100, // Mặc định có 100 sản phẩm trong kho
+    reserved: 0,
+    soldCount: 0,
+  }));
+  
+  // Xóa kho cũ của các sp này (nếu có) và chèn mới
+  await inventoryModel.deleteMany({ product: { $in: insertedProducts.map(p => p._id) } });
+  await inventoryModel.insertMany(inventoryDocs);
+
   console.log(
-    `Seeded ${categoryDocs.length} categories and ${insertedProducts.length} products. (rate: 1 USD = ${USD_TO_VND} VND)`
+    `Seeded ${categoryDocs.length} categories, ${insertedProducts.length} products, and initialized inventories. (rate: 1 USD = ${USD_TO_VND} VND)`
   );
 
   await mongoose.disconnect();
