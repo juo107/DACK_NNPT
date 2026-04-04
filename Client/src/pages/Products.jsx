@@ -36,7 +36,7 @@ const Products = () => {
       <ProductsHero stats={stats} onResetFilters={resetFilters} />
 
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-        <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
+        <div className="flex flex-col gap-8">
           <ProductFilters
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}

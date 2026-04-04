@@ -1,7 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, Layers3, TrendingUp } from 'lucide-react';
-import { Button } from 'antd';
 
 const ProductsHero = ({ stats, onResetFilters }) => {
   return (
@@ -20,7 +18,7 @@ const ProductsHero = ({ stats, onResetFilters }) => {
               <span className="block text-primary">theo phong cách của bạn.</span>
             </h1>
 
-            <p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
+            <p className="mt-6 max-w-2xl rounded-2xl border border-slate-200/80 bg-white/95 px-5 py-4 text-base leading-8 text-slate-700 shadow-sm backdrop-blur-sm sm:text-lg">
               Lọc nhanh theo tên, danh mục và mức giá để tìm đúng sản phẩm bạn cần. Trang này được thiết kế để
               chuyển từ duyệt sang chọn mua thật nhanh.
             </p>
@@ -33,12 +31,13 @@ const ProductsHero = ({ stats, onResetFilters }) => {
                 Xem ngay
                 <ArrowRight className="h-4 w-4" />
               </a>
-              <Button
+              <button
+                type="button"
                 onClick={onResetFilters}
-                className="!h-12 !rounded-full !border-white/20 !bg-white/10 !px-6 !font-bold !text-white hover:!border-white/30 hover:!bg-white/15"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-slate-300 bg-white/95 px-6 font-bold text-slate-800 shadow-sm backdrop-blur-sm transition-colors hover:border-slate-400 hover:bg-white"
               >
                 Đặt lại bộ lọc
-              </Button>
+              </button>
             </div>
           </div>
 

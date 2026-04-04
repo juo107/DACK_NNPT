@@ -43,7 +43,7 @@ const ProductsGrid = ({
         </div>
       ) : (
         <>
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-5 xl:grid-cols-4 xl:gap-5 2xl:grid-cols-5">
             {products.map((product) => (
               <div key={product._id} className="min-h-0 h-full">
                 <ProductCard
