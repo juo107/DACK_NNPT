@@ -20,22 +20,28 @@ let filterImage = function (req, file, cb) {
         cb(new Error("file khong dung dinh dang"))
     }
 }
-let filterExel = function (req, file, cb) {
+let filterExcel = function (req, file, cb) {
     if (file.mimetype.includes('spreadsheetml')) {
         cb(null, true)
     } else {
         cb(new Error("file khong dung dinh dang"))
     }
 }
+
+let excelUploadOptions = {
+    storage: storage,
+    limits: 5 * 1024 * 1024,
+    fileFilter: filterExcel
+}
+
 module.exports = {
     uploadImage: multer({
         storage: storage,
         limits: 5 * 1024 * 1024,
         fileFilter: filterImage
     }),
-    uploadExcel: multer({
-        storage: storage,
-        limits: 5 * 1024 * 1024,
-        fileFilter: filterExel
-    })
+    /** Import sản phẩm (.xlsx) */
+    uploadExcel: multer(excelUploadOptions),
+    /** Import user (.xlsx) — cùng kiểu file, middleware riêng cho route */
+    uploadExcelUsers: multer(excelUploadOptions),
 }
