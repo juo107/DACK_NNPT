@@ -50,26 +50,26 @@ app.use('/api/v1/upload', require('./routes/upload'));
 app.use('/api/v1/messages', require('./routes/messages'));
 app.use('/api/v1/inventories', require('./routes/inventories'));
 app.use('/api/v1/reservations', require('./routes/reservation'));
-const MONGO_URI = 'mongodb://admin:123456@localhost:27017/NNPTUD-C3?authSource=admin';
-mongoose.connect(MONGO_URI);
+const MONGO_URI = 'mongodb://admin:123456@localhost:27017/NNPTUD-C3';
+mongoose.connect('mongodb://127.0.0.1:27017/NNPTUD-C3');
 // Đăng ký model để Mongoose tạo index / dùng được collection wishlists, wishlistitems
 require('./schemas/wishlists');
 require('./schemas/wishlistItems');
-mongoose.connection.on('connected',()=>{
+mongoose.connection.on('connected', () => {
   console.log("connected");
 })
-mongoose.connection.on('disconnected',()=>{
+mongoose.connection.on('disconnected', () => {
   console.log("disconnected");
 })
 
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
