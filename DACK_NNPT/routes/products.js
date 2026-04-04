@@ -2,8 +2,37 @@ var express = require('express');
 var router = express.Router();
 let productModel = require('../schemas/products');//dbContext
 let inventoryModel = require('../schemas/inventories')
+let reviewModel = require('../schemas/reviews')
+let { CheckLogin } = require('../utils/authHandler')
 const { default: slugify } = require('slugify');
 let mongoose = require('mongoose')
+
+async function getReviewSummary(productId) {
+  const summary = await reviewModel.aggregate([
+    {
+      $match: {
+        product: new mongoose.Types.ObjectId(productId),
+        isDeleted: false,
+      },
+    },
+    {
+      $group: {
+        _id: '$product',
+        averageRating: { $avg: '$rating' },
+        reviewCount: { $sum: 1 },
+      },
+    },
+  ]);
+
+  if (!summary.length) {
+    return { averageRating: 0, reviewCount: 0 };
+  }
+
+  return {
+    averageRating: Number(summary[0].averageRating.toFixed(1)),
+    reviewCount: summary[0].reviewCount,
+  };
+}
 
 /* GET users listing. */
 router.get('/', async function (req, res, next) {
@@ -47,12 +76,90 @@ router.get('/:id', async function (req, res, next) {
       _id: id
     })
     if (result) {
-      res.send(result);
+      const reviewSummary = await getReviewSummary(id);
+      res.send({
+        ...result.toObject(),
+        averageRating: reviewSummary.averageRating,
+        reviewCount: reviewSummary.reviewCount,
+      });
     } else {
       res.status(404).send({ message: "ID NOT FOUND" });
     }
   } catch (error) {
     res.status(404).send({ message: error.message });
+  }
+});
+
+router.get('/:id/reviews', async function (req, res, next) {
+  try {
+    const product = await productModel.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
+
+    if (!product) {
+      return res.status(404).send({ message: 'ID NOT FOUND' });
+    }
+
+    const reviews = await reviewModel
+      .find({ product: req.params.id, isDeleted: false })
+      .populate({ path: 'user', select: 'username avatarUrl' })
+      .sort({ createdAt: -1 });
+
+    const summary = await getReviewSummary(req.params.id);
+    res.send({ ...summary, reviews });
+  } catch (error) {
+    res.status(400).send({ message: error.message });
+  }
+});
+
+router.post('/:id/reviews', CheckLogin, async function (req, res, next) {
+  try {
+    const { rating, comment } = req.body;
+    const ratingValue = Number(rating);
+
+    if (!Number.isInteger(ratingValue) || ratingValue < 1 || ratingValue > 5) {
+      return res.status(400).send({ message: 'rating phai tu 1 den 5' });
+    }
+
+    const product = await productModel.findOne({
+      _id: req.params.id,
+      isDeleted: false,
+    });
+
+    if (!product) {
+      return res.status(404).send({ message: 'ID NOT FOUND' });
+    }
+
+    let review = await reviewModel.findOne({
+      product: req.params.id,
+      user: req.user._id,
+    });
+
+    if (review) {
+      review.rating = ratingValue;
+      review.comment = (comment || '').toString().trim();
+      review.isDeleted = false;
+      await review.save();
+    } else {
+      review = await reviewModel.create({
+        product: req.params.id,
+        user: req.user._id,
+        rating: ratingValue,
+        comment: (comment || '').toString().trim(),
+      });
+    }
+
+    review = await review.populate({ path: 'user', select: 'username avatarUrl' });
+    const summary = await getReviewSummary(req.params.id);
+
+    res.send({
+      message: 'Danh gia thanh cong',
+      review,
+      ...summary,
+    });
+  } catch (error) {
+    res.status(400).send({ message: error.message });
   }
 });
 

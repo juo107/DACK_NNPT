@@ -21,6 +21,9 @@ const useProductDetail = (productId) => {
   const [product, setProduct] = useState(null);
   const [inventory, setInventory] = useState(null);
   const [products, setProducts] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
@@ -34,14 +37,16 @@ const useProductDetail = (productId) => {
       setLoading(true);
       setError('');
 
-      const [detailResponse, listResponse, inventoryData] = await Promise.all([
+      const [detailResponse, listResponse, inventoryData, reviewResponse] = await Promise.all([
         productApi.getById(productId),
         productApi.getAll(),
-        inventoryApi.getByProductId(productId)
+        inventoryApi.getByProductId(productId),
+        productApi.getReviews(productId)
       ]);
 
       const detail = detailResponse?.data || detailResponse;
       const list = Array.isArray(listResponse) ? listResponse : listResponse?.data || [];
+      const reviewData = reviewResponse?.data || reviewResponse || {};
 
       if (!detail) {
         setError('Sản phẩm không tồn tại hoặc đã bị xóa.');
@@ -51,6 +56,9 @@ const useProductDetail = (productId) => {
       setProduct(detail);
       setProducts(list);
       setInventory(inventoryData);
+      setReviews(Array.isArray(reviewData.reviews) ? reviewData.reviews : []);
+      setReviewCount(Number(reviewData.reviewCount || detail.reviewCount || 0));
+      setAverageRating(Number(reviewData.averageRating || detail.averageRating || 0));
     } catch (fetchError) {
       setError('Không thể tải chi tiết sản phẩm.');
       message.error('Không thể tải chi tiết sản phẩm');
@@ -115,7 +123,13 @@ const useProductDetail = (productId) => {
     quantity,
     increaseQty,
     decreaseQty,
-    relatedProducts
+    relatedProducts,
+    reviews,
+    reviewCount,
+    averageRating,
+    setReviews,
+    setReviewCount,
+    setAverageRating
   };
 };
 

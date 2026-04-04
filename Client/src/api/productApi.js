@@ -30,6 +30,18 @@ const productApi = {
     const url = `/products/${id}`;
     return axiosInstance.delete(url);
   },
+
+  // Lấy danh sách đánh giá theo sản phẩm
+  getReviews: (id) => {
+    const url = `/products/${id}/reviews`;
+    return axiosInstance.get(url);
+  },
+
+  // Gửi đánh giá sản phẩm (1-5 sao + nhận xét)
+  submitReview: (id, data) => {
+    const url = `/products/${id}/reviews`;
+    return axiosInstance.post(url, data);
+  },
 };
 
 export default productApi;

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Alert, Button, Empty, Skeleton, Tag, message } from 'antd';
+import { Alert, Button, Empty, Form, Input, Rate, Skeleton, Tag, message } from 'antd';
 import { ArrowLeft, Heart, ShoppingBag, Star, CreditCard } from 'lucide-react';
 import useProductDetail from '../hooks/useProductDetail';
 import useCart from '../hooks/useCart';
 import useWishlist from '../hooks/useWishlist';
 import { formatCurrency, getImageUrl } from '../utils/productHelpers';
 import reservationApi from '../api/reservationApi';
+import productApi from '../api/productApi';
 
 /**
  * Component: ProductDetail
@@ -19,6 +20,9 @@ const ProductDetail = () => {
     const [buying, setBuying] = useState(false);
     const [adding, setAdding] = useState(false);
     const [wishBusy, setWishBusy] = useState(false);
+    const [reviewSubmitting, setReviewSubmitting] = useState(false);
+    const [reviewForm] = Form.useForm();
+    const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
 
     // -- Hooks --
     const {
@@ -36,7 +40,13 @@ const ProductDetail = () => {
         quantity,
         increaseQty,
         decreaseQty,
-        relatedProducts
+        relatedProducts,
+        reviews,
+        reviewCount,
+        averageRating,
+        setReviews,
+        setReviewCount,
+        setAverageRating
     } = useProductDetail(id);
 
     const { addItem, isGuest } = useCart();
@@ -88,6 +98,37 @@ const ProductDetail = () => {
             message.error(err?.response?.data?.message || 'Mua hàng thất bại');
         } finally {
             setBuying(false);
+        }
+    };
+
+    const reloadReviews = async () => {
+        const reviewData = await productApi.getReviews(id);
+        const normalized = reviewData?.data || reviewData || {};
+        setReviews(Array.isArray(normalized.reviews) ? normalized.reviews : []);
+        setReviewCount(Number(normalized.reviewCount || 0));
+        setAverageRating(Number(normalized.averageRating || 0));
+    };
+
+    const handleSubmitReview = async (values) => {
+        if (!currentUser?._id) {
+            message.warning('Vui lòng đăng nhập để đánh giá sản phẩm');
+            window.dispatchEvent(new Event('openAuthModal'));
+            return;
+        }
+
+        try {
+            setReviewSubmitting(true);
+            await productApi.submitReview(id, {
+                rating: values.rating,
+                comment: values.comment || '',
+            });
+            await reloadReviews();
+            reviewForm.resetFields();
+            message.success('Đánh giá của bạn đã được lưu');
+        } catch (submitError) {
+            message.error(submitError?.response?.data?.message || 'Gửi đánh giá thất bại');
+        } finally {
+            setReviewSubmitting(false);
         }
     };
 
@@ -144,10 +185,10 @@ const ProductDetail = () => {
                         <div className="mt-4 flex items-center gap-4">
                             <div className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-4 py-1.5 text-sm font-black text-amber-600">
                                 <Star className="h-4 w-4 fill-current" />
-                                {Number(product.rating || 5).toFixed(1)}
+                                {Number(averageRating || 0).toFixed(1)}
                             </div>
                             <span className="text-sm font-bold text-slate-300">|</span>
-                            <span className="text-sm font-semibold text-slate-400">Đã bán 1.2k+</span>
+                            <span className="text-sm font-semibold text-slate-400">{reviewCount} đánh giá</span>
                         </div>
 
                         <div className="mt-8 border-y border-slate-50 py-8">
@@ -260,6 +301,72 @@ const ProductDetail = () => {
                             >
                                 {inWishlist ? 'Đã lưu yêu thích' : 'Thêm vào yêu thích'}
                             </Button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-12 rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm lg:p-8">
+                    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-6">
+                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Đánh giá sản phẩm</h2>
+                        <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-sm font-bold text-amber-600">
+                            <Rate allowHalf disabled value={Number(averageRating || 0)} />
+                            <span>{Number(averageRating || 0).toFixed(1)} / 5 ({reviewCount})</span>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+                        <div className="space-y-4">
+                            {reviews.length === 0 ? (
+                                <Empty description="Chưa có đánh giá nào" />
+                            ) : (
+                                reviews.map((item) => (
+                                    <div key={item._id} className="rounded-2xl border border-slate-100 p-4">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div>
+                                                <div className="text-sm font-bold text-slate-900">{item?.user?.username || 'Người dùng'}</div>
+                                                <div className="mt-1"><Rate disabled value={Number(item.rating || 0)} /></div>
+                                            </div>
+                                            <div className="text-xs text-slate-400">{new Date(item.createdAt).toLocaleDateString('vi-VN')}</div>
+                                        </div>
+                                        <p className="mt-3 whitespace-pre-line text-sm text-slate-600">{item.comment || 'Không có nhận xét'}</p>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                            <h3 className="text-lg font-black text-slate-900">Viết đánh giá của bạn</h3>
+                            <Form
+                                form={reviewForm}
+                                layout="vertical"
+                                className="mt-4"
+                                onFinish={handleSubmitReview}
+                                initialValues={{ rating: 5, comment: '' }}
+                            >
+                                <Form.Item
+                                    label="Số sao"
+                                    name="rating"
+                                    rules={[{ required: true, message: 'Vui lòng chọn số sao' }]}
+                                >
+                                    <Rate />
+                                </Form.Item>
+                                <Form.Item
+                                    label="Nhận xét"
+                                    name="comment"
+                                    rules={[{ required: true, message: 'Vui lòng nhập nhận xét' }]}
+                                >
+                                    <Input.TextArea rows={5} maxLength={500} placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm..." />
+                                </Form.Item>
+                                <Button
+                                    type="primary"
+                                    htmlType="submit"
+                                    loading={reviewSubmitting}
+                                    className="!h-11 !rounded-xl !bg-slate-900 hover:!bg-slate-800 !border-none font-bold"
+                                    block
+                                >
+                                    Gửi đánh giá
+                                </Button>
+                            </Form>
                         </div>
                     </div>
                 </div>
