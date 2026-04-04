@@ -12,8 +12,20 @@ export const CartProvider = ({ children }) => {
 
     // 1. Sync user
     useEffect(() => {
-        const savedUser = localStorage.getItem('user');
-        if (savedUser) setUser(JSON.parse(savedUser));
+        const syncUser = () => {
+            const savedUser = localStorage.getItem('user');
+            if (savedUser) setUser(JSON.parse(savedUser));
+            else setUser(null);
+        };
+
+        syncUser();
+        // Lắng nghe sự kiện storage (cho nhiều tab) và một custom event để đồng bộ ngay lập tức
+        window.addEventListener('storage', syncUser);
+        window.addEventListener('userChanged', syncUser);
+        return () => {
+            window.removeEventListener('storage', syncUser);
+            window.removeEventListener('userChanged', syncUser);
+        };
     }, []);
 
     // 2. Fetch Cart Logic

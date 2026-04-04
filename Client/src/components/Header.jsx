@@ -34,10 +34,14 @@ const Header = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    window.dispatchEvent(new Event('userChanged'));
     setUser(null);
     message.success('Đã đăng xuất!');
-    // Reload để hook useCart nhận biết user đã null
-    window.location.reload();
+    // Reload để hook useCart nhận biết user đã null và resetting toàn bộ state
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
   const userMenuItems = [

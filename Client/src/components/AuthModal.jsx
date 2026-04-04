@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Modal, Tabs, Form, Input, Button, message, Alert } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import authApi from '../api/authApi';
+import useCart from '../hooks/useCart';
 
 const AuthModal = ({ open, onCancel, onLoginSuccess }) => {
+  const { mergeGuestCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [tabKey, setTabKey] = useState('login');
   const [errorVisible, setErrorVisible] = useState('');
@@ -19,26 +21,28 @@ const AuthModal = ({ open, onCancel, onLoginSuccess }) => {
     setLoading(true);
     setErrorVisible('');
     try {
-      const response = await authApi.login(values);
-      localStorage.setItem('user', JSON.stringify(response));
+      const token = await authApi.login(values);
+      // 1. Lưu token để axiosInstance có thể dùng ngay
+      localStorage.setItem('token', token);
+      
+      // 2. Lấy thông tin user thực tế
+      const userData = await authApi.getMe();
+      localStorage.setItem('user', JSON.stringify(userData));
 
-      // HỢP NHẤT GIỎ HÀNG (Khách -> Thành viên)
-      const guestCart = JSON.parse(localStorage.getItem('nn_guest_cart')) || [];
-      if (guestCart.length > 0) {
-        const cartApi = (await import('../api/cartApi')).default;
-        for (const item of guestCart) {
-          await cartApi.add({ 
-            product: item.product?._id || item.product, 
-            quantity: item.quantity 
-          });
-        }
-        localStorage.removeItem('nn_guest_cart');
-      }
+      // 3. Đồng bộ ngay lập tức cho các Context đang lắng nghe
+      window.dispatchEvent(new Event('userChanged'));
+
+      // 4. HỢP NHẤT GIỎ HÀNG (Sử dụng logic tập trung từ Context)
+      await mergeGuestCart();
 
       message.success('Đăng nhập thành công!');
-      onLoginSuccess(response);
+      onLoginSuccess(userData);
       onCancel();
-      window.location.reload(); 
+      
+      // Reload sau một khoảng thời gian ngắn để đảm bảo trải nghiệm ổn định
+      setTimeout(() => {
+        window.location.reload();
+      }, 800);
     } catch (error) {
       setErrorVisible(error.response?.data || 'Đăng nhập thất bại!');
     } finally {
