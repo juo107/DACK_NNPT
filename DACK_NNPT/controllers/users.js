@@ -15,7 +15,7 @@ module.exports = {
             role: role,
             loginCount: loginCount
         });
-        await newItem.save({ session });
+        await newItem.save(session ? { session } : {});
         return newItem;
     },
     GetAllUser: async function () {
