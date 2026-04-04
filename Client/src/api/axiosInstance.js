@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { message } from 'antd';
 
 // Dev: qua proxy Vite (/api -> localhost:3000) để tránh CORS + withCredentials.
 // Build: đặt VITE_API_BASE=http://localhost:3000/api/v1 (hoặc URL server thật).
@@ -37,16 +38,24 @@ axiosInstance.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 401:
-          console.error('Unauthorized - Vui lòng đăng nhập lại.');
+          message.warning('Vui lòng đăng nhập lại.');
           break;
         case 404:
-          console.error('API endpoint không tồn tại.');
+          message.error('Không tìm thấy tài nguyên (404).');
           break;
         case 500:
-          console.error('Lỗi Server - Vui lòng thử lại sau.');
+          message.error('Lỗi Server hệ thống (500).');
           break;
         default:
-          console.error('Đã xảy ra lỗi:', error.response.data.message);
+          {
+            const data = error.response.data;
+            const errMsg = typeof data === 'string' 
+              ? data 
+              : (data?.message || (Array.isArray(data) ? 'Dữ liệu không hợp lệ' : 'Lỗi không xác định'));
+            message.error(errMsg);
+            console.error('Lỗi phản hồi:', errMsg);
+          }
+          break;
       }
     } else {
       console.error('Không thể kết nối đến Server.');

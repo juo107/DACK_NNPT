@@ -53,6 +53,8 @@ productSchema.pre('save', async function () {
         this.slug = this.slug + "-" + products.length
     }
 })
+
+
 module.exports = new mongoose.model(
     'product', productSchema
 )

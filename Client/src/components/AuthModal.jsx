@@ -1,24 +1,46 @@
 import React, { useState } from 'react';
-import { Modal, Tabs, Form, Input, Button, message } from 'antd';
+import { Modal, Tabs, Form, Input, Button, message, Alert } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import authApi from '../api/authApi';
 
 const AuthModal = ({ open, onCancel, onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [tabKey, setTabKey] = useState('login');
+  const [errorVisible, setErrorVisible] = useState('');
+
+  // Xóa lỗi khi đổi Tab
+  const handleTabChange = (key) => {
+    setTabKey(key);
+    setErrorVisible('');
+  };
 
   // Xử lý đăng nhập
   const handleLogin = async (values) => {
     setLoading(true);
+    setErrorVisible('');
     try {
       const response = await authApi.login(values);
-      // Lưu thông tin user vào localStorage (Backend trả về info user)
       localStorage.setItem('user', JSON.stringify(response));
+
+      // HỢP NHẤT GIỎ HÀNG (Khách -> Thành viên)
+      const guestCart = JSON.parse(localStorage.getItem('nn_guest_cart')) || [];
+      if (guestCart.length > 0) {
+        const cartApi = (await import('../api/cartApi')).default;
+        for (const item of guestCart) {
+          await cartApi.add({ 
+            product: item.product?._id || item.product, 
+            quantity: item.quantity 
+          });
+        }
+        localStorage.removeItem('nn_guest_cart');
+      }
+
       message.success('Đăng nhập thành công!');
       onLoginSuccess(response);
-      onCancel(); // Đóng modal
+      onCancel();
+      window.location.reload(); 
     } catch (error) {
-      message.error(error.response?.data || 'Đăng nhập thất bại!');
+      setErrorVisible(error.response?.data || 'Đăng nhập thất bại!');
     } finally {
       setLoading(false);
     }
@@ -27,12 +49,13 @@ const AuthModal = ({ open, onCancel, onLoginSuccess }) => {
   // Xử lý đăng ký
   const handleRegister = async (values) => {
     setLoading(true);
+    setErrorVisible('');
     try {
       await authApi.register(values);
       message.success('Đăng ký thành công! Hãy đăng nhập.');
-      setTabKey('login'); // Chuyển sang tab đăng nhập
+      setTabKey('login');
     } catch (error) {
-      message.error(error.response?.data || 'Đăng ký thất bại!');
+      setErrorVisible(error.response?.data || 'Đăng ký thất bại!');
     } finally {
       setLoading(false);
     }
@@ -50,14 +73,18 @@ const AuthModal = ({ open, onCancel, onLoginSuccess }) => {
     >
       <Tabs
         activeKey={tabKey}
-        onChange={setTabKey}
+        onChange={handleTabChange}
         centered
         items={[
           {
             key: 'login',
             label: 'Đăng nhập',
             children: (
-              <Form onFinish={handleLogin} layout="vertical">
+              <div className="space-y-4 pt-2">
+                {errorVisible && tabKey === 'login' && (
+                  <Alert message={errorVisible} type="error" showIcon closable className="rounded-xl border-none bg-rose-50 text-rose-600 mb-4" />
+                )}
+                <Form onFinish={handleLogin} layout="vertical">
                 <Form.Item
                   name="username"
                   rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
@@ -73,20 +100,25 @@ const AuthModal = ({ open, onCancel, onLoginSuccess }) => {
                 <Button type="primary" htmlType="submit" block size="large" loading={loading}>
                   Đăng nhập
                 </Button>
-              </Form>
+                </Form>
+              </div>
             ),
           },
           {
             key: 'register',
             label: 'Đăng ký',
             children: (
-              <Form onFinish={handleRegister} layout="vertical">
-                <Form.Item
-                  name="username"
-                  rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
-                >
-                  <Input prefix={<UserOutlined />} placeholder="Username" size="large" />
-                </Form.Item>
+              <div className="space-y-4 pt-2">
+                {errorVisible && tabKey === 'register' && (
+                  <Alert message={errorVisible} type="error" showIcon closable className="rounded-xl border-none bg-rose-50 text-rose-600 mb-4" />
+                )}
+                <Form onFinish={handleRegister} layout="vertical">
+                  <Form.Item
+                    name="username"
+                    rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
+                  >
+                    <Input prefix={<UserOutlined />} placeholder="Username" size="large" />
+                  </Form.Item>
                 <Form.Item
                   name="email"
                   rules={[
@@ -105,7 +137,8 @@ const AuthModal = ({ open, onCancel, onLoginSuccess }) => {
                 <Button type="primary" htmlType="submit" block size="large" loading={loading}>
                   Tạo tài khoản
                 </Button>
-              </Form>
+                </Form>
+              </div>
             ),
           },
         ]}

@@ -8,10 +8,17 @@ import ProductDetail from './pages/ProductDetail';
 import ProductManagement from './pages/admin/ProductManagement';
 import './App.css';
 
+import MyOrders from './pages/MyOrders';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+
+import { CartProvider } from './context/CartContext';
+
 function App() {
   return (
     <Router>
-      <div className="app">
+      <CartProvider>
+        <div className="app">
         <Header />
         <main className="flex-1">
           <Routes>
@@ -22,6 +29,13 @@ function App() {
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             
+            {/* Giỏ hàng */}
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+
+            {/* Đơn mua */}
+            <Route path="/my-orders" element={<MyOrders />} />
+
             {/* Trang quản lý Admin */}
             <Route path="/admin/products" element={<ProductManagement />} />
             
@@ -29,7 +43,8 @@ function App() {
           </Routes>
         </main>
         <Footer />
-      </div>
+        </div>
+      </CartProvider>
     </Router>
   );
 }

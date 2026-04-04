@@ -8,7 +8,7 @@ router.get('/', CheckLogin, async function (req, res, next) {
     let user = req.user;
     let cart = await cartModel.findOne({
         user: user._id
-    })
+    }).populate('items.product');
     res.send(cart.items)
 })
 router.post('/add', CheckLogin, async function (req, res, next) {

@@ -25,8 +25,11 @@ router.post('/login', async function (req, res, next) {
 router.post('/register', RegisterValidator, validatedResult, async function (req, res, next) {
     try {
         let { username, password, email } = req.body;
+        let roleModel = require('../schemas/roles');
+        let defaultRole = await roleModel.findOne({ name: /user/i }) || await roleModel.findOne({});
+        
         let newUser = await userController.CreateAnUser(
-            username, password, email, '69b6231b3de61addb401ea26'
+            username, password, email, defaultRole._id
         )
         let newCart = new cartModel({
             user: newUser._id
@@ -39,7 +42,7 @@ router.post('/register', RegisterValidator, validatedResult, async function (req
         newCart = await newCart.populate('user')
         res.send(newCart)
     } catch (error) {
-        res.status(404).send(error.message)
+        res.status(400).send(error.message)
     }
 })
 router.get('/me', CheckLogin, function (req, res, next) {

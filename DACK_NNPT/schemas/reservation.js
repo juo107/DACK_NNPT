@@ -1,4 +1,5 @@
 let mongoose = require('mongoose')
+
 let reservationItemSchema = mongoose.Schema({
     product: {
         type: mongoose.Types.ObjectId,
@@ -21,6 +22,7 @@ let reservationItemSchema = mongoose.Schema({
         min: 0
     }
 })
+
 let reservationSchema = mongoose.Schema({
     user: {
         type: mongoose.Types.ObjectId,
@@ -40,5 +42,13 @@ let reservationSchema = mongoose.Schema({
     amount: {
         type: Number,
         min: 0
+    },
+    shippingInfo: {
+        fullName: String,
+        phone: String,
+        address: String,
+        note: String
     }
-})
+}, { timestamps: true })
+
+module.exports = mongoose.model('reservation', reservationSchema)

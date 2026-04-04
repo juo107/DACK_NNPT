@@ -3,14 +3,9 @@ module.exports = {
     validatedResult: function (req, res, next) {
         let result = validationResult(req);
         if (result.errors.length > 0) {
-            res.status(404).send(result.errors.map(
-                function (e) {
-                    return {
-                        [e.path]: e.msg
-                    }
-                }
-            ));
-            return;
+            // Lấy lỗi đầu tiên và gửi thông báo đơn giản về Frontend
+            const firstError = result.errors[0];
+            return res.status(400).send(firstError.msg);
         }
         next();
     },

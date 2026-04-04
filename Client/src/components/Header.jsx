@@ -4,7 +4,13 @@ import { Button, Dropdown, Menu, Avatar, Space, message, Badge } from 'antd';
 import { UserOutlined, LogoutOutlined, DownOutlined, SearchOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { Search, ShoppingBag, User, Menu as MenuIcon, X } from 'lucide-react';
 import AuthModal from './AuthModal';
+import useCart from '../hooks/useCart';
 
+/**
+ * Component: Header
+ * UI Layer (Presentation)
+ * Sử dụng useCart hook để hiển thị số lượng giỏ hàng thực tế (Guest/Member)
+ */
 const Header = () => {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -12,37 +18,33 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
+  // -- Hooks --
+  const { items } = useCart();
+  const cartCount = items.length;
+
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    if (savedUser) setUser(JSON.parse(savedUser));
+    
+    // Lắng nghe sự kiện mở AuthModal từ các trang khác
+    const handleOpenAuth = () => setIsAuthOpen(true);
+    window.addEventListener('openAuthModal', handleOpenAuth);
+    return () => window.removeEventListener('openAuthModal', handleOpenAuth);
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     setUser(null);
     message.success('Đã đăng xuất!');
+    // Reload để hook useCart nhận biết user đã null
+    window.location.reload();
   };
 
   const userMenuItems = [
-    {
-      key: 'profile',
-      label: 'Thông tin cá nhân',
-      icon: <UserOutlined />,
-    },
-    {
-      key: 'admin',
-      label: <Link to="/admin/products">Quản trị</Link>,
-      icon: <DownOutlined />,
-    },
-    {
-      key: 'logout',
-      label: 'Đăng xuất',
-      icon: <LogoutOutlined />,
-      danger: true,
-      onClick: handleLogout,
-    },
+    { key: 'profile', label: 'Thông tin cá nhân', icon: <UserOutlined /> },
+    { key: 'myOrders', label: <Link to="/my-orders">Đơn mua của tôi</Link>, icon: <ShoppingBag className="w-4 h-4" /> },
+    { key: 'admin', label: <Link to="/admin/products">Quản trị</Link>, icon: <DownOutlined /> },
+    { key: 'logout', label: 'Đăng xuất', icon: <LogoutOutlined />, danger: true, onClick: handleLogout },
   ];
 
   return (
@@ -73,7 +75,7 @@ const Header = () => {
                   placeholder="Tìm kiếm sản phẩm trên NN STORE..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-11 pl-4 pr-12 rounded-l-md border-2 border-transparent bg-gray-100 focus:bg-white focus:border-orange-400 focus:outline-none transition-all placeholder:text-gray-500"
+                  className="w-full h-11 pl-4 pr-12 rounded-l-md border-2 border-transparent bg-gray-100 focus:bg-white focus:border-orange-400 focus:outline-none transition-all placeholder:text-gray-500 font-medium"
                 />
               </div>
               <button
@@ -88,39 +90,22 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex flex-1 justify-center">
             <ul className="flex items-center gap-8">
-
-              <li>
-                <Link to="/" className="text-sm font-semibold text-gray-900 hover:text-primary transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all hover:after:w-full">
-                  Trang chủ
-                </Link>
-              </li>
-              <li>
-                <Link to="/products" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">
-                  Sản phẩm
-                </Link>
-              </li>
-              <li>
-                <Link to="/news" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">
-                  Tin tức
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">
-                  Liên hệ
-                </Link>
-              </li>
+              <li><Link to="/" className="text-sm font-semibold text-gray-900 hover:text-primary transition-colors">Trang chủ</Link></li>
+              <li><Link to="/products" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Sản phẩm</Link></li>
+              <li><Link to="/news" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Tin tức</Link></li>
+              <li><Link to="/contact" className="text-sm font-medium text-gray-600 hover:text-primary transition-colors">Liên hệ</Link></li>
             </ul>
           </nav>
 
-          {/* Right Section: Search, Cart, Auth */}
+          {/* Right Section */}
           <div className="flex items-center space-x-4">
             <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors md:hidden">
               <Search className="w-5 h-5" />
             </button>
             
-            <Link to="/cart" className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors relative">
-              <Badge count={2} offset={[5, -5]} size="small">
-                <ShoppingBag className="w-6 h-6" />
+            <Link to="/cart" className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors relative group">
+              <Badge count={cartCount} offset={[5, -5]} size="small" color="orange" className="font-bold">
+                <ShoppingBag className="w-6 h-6 group-hover:text-primary transition-colors" />
               </Badge>
             </Link>
 
@@ -130,18 +115,14 @@ const Header = () => {
               {user ? (
                 <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
                   <div className="flex items-center gap-2 cursor-pointer p-1 pr-3 hover:bg-gray-50 rounded-full transition-colors">
-                    <Avatar 
-                      src={user.avatar} 
-                      icon={<UserOutlined />} 
-                      className="bg-primary/10 text-primary border border-primary/20"
-                    />
+                    <Avatar src={user.avatar} icon={<UserOutlined />} className="bg-primary/10 text-primary border border-primary/20" />
                     <span className="text-sm font-semibold hidden md:inline-block text-gray-800">{user.username}</span>
                   </div>
                 </Dropdown>
               ) : (
                 <button 
                   onClick={() => setIsAuthOpen(true)}
-                  className="bg-gray-900 text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-primary transition-all duration-300 transform hover:scale-105 active:scale-95"
+                  className="bg-gray-900 text-white px-5 py-2.5 rounded-full text-sm font-bold hover:bg-primary transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg shadow-gray-200"
                 >
                   Đăng nhập
                 </button>
@@ -172,11 +153,10 @@ const Header = () => {
       <AuthModal 
         open={isAuthOpen} 
         onCancel={() => setIsAuthOpen(false)} 
-        onLoginSuccess={(userData) => setUser(userData)}
+        onLoginSuccess={(userData) => { setUser(userData); setIsAuthOpen(false); }}
       />
     </header>
   );
 };
 
 export default Header;
-
