@@ -46,6 +46,7 @@ app.use('/api/v1/categories', require('./routes/categories'));
 app.use('/api/v1/roles', require('./routes/roles'));
 app.use('/api/v1/auth', require('./routes/auth'));
 app.use('/api/v1/carts', require('./routes/carts'));
+app.use('/api/v1/wishlists', require('./routes/wishlists'));
 app.use('/api/v1/upload', require('./routes/upload'));
 app.use('/api/v1/messages', require('./routes/messages'));
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/NNPTUD-C3';
