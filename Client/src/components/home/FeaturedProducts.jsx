@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom';
 import { Rate, Spin, message } from 'antd';
 import productApi from '../../api/productApi';
 import { formatCurrency } from '../../utils/productHelpers';
+import useCart from '../../hooks/useCart';
 
 const FeaturedProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addingId, setAddingId] = useState(null);
+  const { addItem } = useCart();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -41,7 +44,8 @@ const FeaturedProducts = () => {
             rating: item.rating || 5,
             image: imageUrl,
             tag: item.tag || (item.salePrice ? 'Sale' : null),
-            category: item.category?.name || 'Sản phẩm'
+            category: item.category?.name || 'Sản phẩm',
+            apiProduct: item,
           };
         });
 
@@ -109,8 +113,23 @@ const FeaturedProducts = () => {
                   )}
                 </div>
 
-                <button className="mt-2 w-full py-1.5 bg-orange-400 hover:bg-orange-500 text-gray-900 font-semibold text-sm rounded transition-colors">
-                  Thêm vào giỏ
+                <button
+                  type="button"
+                  disabled={addingId === product.id}
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!product.apiProduct?._id) return;
+                    setAddingId(product.id);
+                    try {
+                      await addItem(product.apiProduct, 1);
+                    } finally {
+                      setAddingId(null);
+                    }
+                  }}
+                  className="mt-2 w-full py-1.5 bg-orange-400 hover:bg-orange-500 disabled:opacity-60 text-gray-900 font-semibold text-sm rounded transition-colors"
+                >
+                  {addingId === product.id ? 'Đang thêm…' : 'Thêm vào giỏ'}
                 </button>
               </div>
             </div>
