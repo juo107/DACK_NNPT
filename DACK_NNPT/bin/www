@@ -7,7 +7,7 @@
 var app = require('../app');
 var debug = require('debug')('nnptud-c3:server');
 var http = require('http');
-let {serverSocket} = require('../utils/chatHandler')
+let { serverSocket } = require('../utils/chatHandler')
 
 
 /**

@@ -5,7 +5,11 @@ const roleModel = require('./schemas/roles');
 const userModel = require('./schemas/users');
 const inventoryModel = require('./schemas/inventories');
 
+<<<<<<< HEAD
 const mongoUrl = 'mongodb://localhost:27017/NNPTUD-C3';
+=======
+const mongoUrl = 'mongodb://127.0.0.1:27017/NNPTUD-C3';
+>>>>>>> 35dd1f2d92f839a2f6034d3da05e3de84a91837d
 const USD_TO_VND = 26000;
 
 const categories = [
@@ -387,7 +391,7 @@ async function main() {
     reserved: 0,
     soldCount: 0,
   }));
-  
+
   // Xóa kho cũ của các sp này (nếu có) và chèn mới
   await inventoryModel.deleteMany({ product: { $in: insertedProducts.map(p => p._id) } });
   await inventoryModel.insertMany(inventoryDocs);
