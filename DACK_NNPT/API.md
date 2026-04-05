@@ -102,8 +102,6 @@
 
 | Method | Đường dẫn | Ghi chú |
 |--------|-----------|---------|
-| POST | `/api/v1/upload/one_image` | `multipart` field `file` |
-| POST | `/api/v1/upload/multiple_images` | field `files`, tối đa 5 |
 | POST | `/api/v1/upload/excel_users` | Import user từ Excel |
 | POST | `/api/v1/upload/excel` | Import sản phẩm + tồn kho từ Excel |
 | GET | `/api/v1/upload/:filename` | Tải/xem file đã upload |

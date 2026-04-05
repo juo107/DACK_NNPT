@@ -1,6 +1,6 @@
 let express = require('express')
 let router = express.Router()
-let { uploadImage, uploadExcel, uploadExcelUsers } = require('../utils/uploadHandler')
+let { uploadExcel, uploadExcelUsers } = require('../utils/uploadHandler')
 let path = require('path')
 let exceljs = require('exceljs')
 let fs = require('fs')
@@ -25,35 +25,6 @@ function excelCellText(cell) {
     }
     return String(v).trim()
 }
-
-router.post('/one_image', uploadImage.single('file'), function (req, res, next) {
-    if (!req.file) {
-        res.status(404).send({
-            message: "file not found"
-        })
-    } else {
-        console.log(req.body);
-        res.send({
-            filename: req.file.filename,
-            path: req.file.path,
-            size: req.file.size
-        })
-    }
-})
-router.post('/multiple_images', uploadImage.array('files', 5), function (req, res, next) {
-    if (!req.files) {
-        res.status(404).send({
-            message: "file not found"
-        })
-    } else {
-        console.log(req.body);
-        res.send(req.files.map(f => ({
-            filename: f.filename,
-            path: f.path,
-            size: f.size
-        })))
-    }
-})
 
 router.post('/excel_users', uploadExcelUsers.single('file'), async function (req, res, next) {
     if (!req.file) {

@@ -146,9 +146,8 @@ Tài liệu này cung cấp toàn bộ các kịch bản kiểm thử API (Testi
 ---
 
 ## 🖼 7. HÌNH ẢNH & FILE (UPLOAD)
-- **Method**: `POST` | **URL**: `/upload/one_image`
-- **Form-Data**: key `file` (chọn file ảnh từ máy tính).
-> **HD chụp ảnh**: Chụp link ảnh trả về từ Cloudinary/Server sau khi upload thành công.
+- Upload ảnh hàng loạt qua `/upload/...` đã gỡ. Có thể dùng **tin nhắn có file**: `POST /messages` (CheckLogin), Form-Data: `file` + các field text theo API Messages.
+> **HD chụp ảnh**: Chụp status và JSON trả về sau khi gửi.
 
 ---
 
