@@ -10,6 +10,7 @@ import {
   UserOutlined,
   LogoutOutlined,
   HomeOutlined,
+  GiftOutlined,
 } from '@ant-design/icons';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 
@@ -43,6 +44,11 @@ const AdminLayout = () => {
       key: '/admin/products',
       icon: <ShoppingOutlined />,
       label: <Link to="/admin/products">Sản phẩm</Link>,
+    },
+    {
+      key: '/admin/promotions',
+      icon: <GiftOutlined />,
+      label: <Link to="/admin/promotions">Khuyến mãi</Link>,
     },
     {
       key: '/admin/categories',

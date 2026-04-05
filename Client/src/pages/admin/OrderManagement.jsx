@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Space, Button, Tag, Popconfirm, message, Form, Select, Descriptions, Table, Typography } from 'antd';
-import { EyeOutlined, DeleteOutlined, SyncOutlined } from '@ant-design/icons';
+import { EyeOutlined, DeleteOutlined, SyncOutlined, ScissorOutlined as ScissorsOutlined } from '@ant-design/icons';
 import AdminTable from '../../components/admin/Table';
 import AdminModal from '../../components/admin/Modal';
 import reservationApi from '../../api/reservationApi';
@@ -74,6 +74,20 @@ const OrderManagement = () => {
           <div style={{ fontWeight: '500' }}>{user?.username || 'N/A'}</div>
           <div style={{ fontSize: '12px', color: '#8c8c8c' }}>{user?.email}</div>
         </div>
+      ),
+    },
+    {
+      title: 'Khuyến mãi',
+      key: 'promotion',
+      render: (_, record) => (
+        record.promotion ? (
+          <Space direction="vertical" size={0}>
+            <Tag color="magenta">{record.promotion.code}</Tag>
+            <Text type="secondary" style={{ fontSize: '12px' }}>
+              -{new Intl.NumberFormat('vi-VN').format(record.discountAmount || 0)}đ
+            </Text>
+          </Space>
+        ) : <Text type="secondary">-</Text>
       ),
     },
     {
@@ -168,6 +182,16 @@ const OrderManagement = () => {
           <Descriptions.Item label="Điện thoại">{selectedOrder?.shippingInfo?.phone || 'N/A'}</Descriptions.Item>
           <Descriptions.Item label="Địa chỉ" span={2}>{selectedOrder?.shippingInfo?.address || 'N/A'}</Descriptions.Item>
           <Descriptions.Item label="Ghi chú" span={2}>{selectedOrder?.shippingInfo?.note || 'Không có'}</Descriptions.Item>
+          {selectedOrder?.promotion && (
+            <>
+              <Descriptions.Item label="Mã giảm giá">
+                <Tag color="magenta" icon={<ScissorsOutlined />}>{selectedOrder.promotion.code}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Số tiền giảm">
+                <Text type="danger" strong>-{new Intl.NumberFormat('vi-VN').format(selectedOrder.discountAmount)}đ</Text>
+              </Descriptions.Item>
+            </>
+          )}
         </Descriptions>
 
         <Typography.Title level={5}>Sản phẩm trong đơn</Typography.Title>

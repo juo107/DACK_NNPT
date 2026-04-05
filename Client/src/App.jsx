@@ -7,6 +7,7 @@ import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import ProductManagement from './pages/admin/ProductManagement';
 import OrderManagement from './pages/admin/OrderManagement';
+import PromotionManagement from './pages/admin/PromotionManagement';
 import './App.css';
 
 import MyOrders from './pages/MyOrders';
@@ -60,6 +61,7 @@ function App() {
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="orders" element={<OrderManagement />} />
                 <Route path="products" element={<ProductManagement />} />
+                <Route path="promotions" element={<PromotionManagement />} />
                 <Route path="categories" element={<CategoryManagement />} />
                 <Route path="inventories" element={<InventoryManagement />} />
               </Route>

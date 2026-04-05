@@ -21,7 +21,11 @@ import {
 } from 'lucide-react';
 import useCart from '../hooks/useCart';
 import { formatCurrency, getImageUrl } from '../utils/productHelpers';
+import productApi from '../api/productApi';
 import reservationApi from '../api/reservationApi';
+import promotionApi from '../api/promotionApi';
+import { Tag as AntTag } from 'antd'; // Tên khác để tránh xung đột nếu có
+import { Scissors, X, Percent } from 'lucide-react';
 
 /**
  * Page: Checkout
@@ -32,6 +36,12 @@ const Checkout = () => {
   const [form] = Form.useForm();
   const { items, total, subtotal, shipping, clearCart, isGuest } = useCart();
   const [loading, setLoading] = useState(false);
+  
+  // Promotion State
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [promoLoading, setPromoLoading] = useState(false);
 
   // Redirect nếu giỏ hàng trống
   React.useEffect(() => {
@@ -44,6 +54,50 @@ const Checkout = () => {
     return null;
   }
 
+  // Logic áp dụng mã giảm giá
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return;
+    
+    setPromoLoading(true);
+    try {
+      const response = await promotionApi.validate(promoCode);
+      const promo = response.data?.promotion || response.promotion;
+
+      // Kiểm tra giá trị đơn tối thiểu
+      if (subtotal < promo.minOrderValue) {
+        throw new Error(`Đơn hàng tối thiểu ${formatCurrency(promo.minOrderValue)} để sử dụng mã này.`);
+      }
+
+      setAppliedPromo(promo);
+      let calculatedDiscount = 0;
+      if (promo.discountType === 'percentage') {
+        calculatedDiscount = Math.floor(subtotal * (promo.discountValue / 100));
+        if (promo.maxDiscountValue > 0 && calculatedDiscount > promo.maxDiscountValue) {
+          calculatedDiscount = promo.maxDiscountValue;
+        }
+      } else {
+        calculatedDiscount = promo.discountValue;
+      }
+
+      setDiscountAmount(calculatedDiscount);
+      message.success('Áp dụng mã giảm giá thành công!');
+    } catch (error) {
+      console.error('Promo error:', error);
+      message.error(error.response?.data?.message || error.message || 'Mã không hợp lệ');
+      setAppliedPromo(null);
+      setDiscountAmount(0);
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setDiscountAmount(0);
+    setPromoCode('');
+    message.info('Đã gỡ mã giảm giá');
+  };
+
   // Xử lý xác nhận đặt hàng
   const onFinish = async (values) => {
     setLoading(true);
@@ -54,7 +108,8 @@ const Checkout = () => {
           product: item.product?._id || item.product,
           quantity: item.quantity
         })),
-        shippingInfo: values // Có thể mở rộng schema backend để lưu thông tin này
+        shippingInfo: values,
+        promotionId: appliedPromo?._id // Gửi ID khuyến mãi lên server
       };
 
       // 2. Gọi API đặt hàng
@@ -217,6 +272,51 @@ const Checkout = () => {
                     <span>Phí vận chuyển</span>
                     <span className="text-white">{shipping === 0 ? 'Miễn phí' : formatCurrency(shipping)}</span>
                   </div>
+
+                  {/* Input Promo Code */}
+                  <div className="pt-4">
+                    {!appliedPromo ? (
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="Mã giảm giá (VD: WELCOME10)" 
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                          className="bg-white/10 border-white/20 text-white placeholder:text-slate-500 h-10 rounded-xl"
+                        />
+                        <Button 
+                          onClick={handleApplyPromo}
+                          loading={promoLoading}
+                          className="!bg-primary !border-none !text-white font-bold h-10 rounded-xl px-4"
+                        >
+                          ÁP DỤNG
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between p-3 bg-white/5 border border-dashed border-white/20 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-primary/20 rounded-lg text-primary">
+                            <Scissors className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-black text-primary uppercase tracking-widest">{appliedPromo.code}</div>
+                            <div className="text-[10px] text-slate-400">Đã áp dụng giảm giá</div>
+                          </div>
+                        </div>
+                        <Button 
+                          type="text" 
+                          icon={<X className="w-4 h-4 text-slate-500 hover:text-white" />} 
+                          onClick={handleRemovePromo}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-primary font-bold animate-pulse">
+                      <span className="flex items-center gap-1"><Percent className="w-4 h-4" /> Khuyến mãi</span>
+                      <span>-{formatCurrency(discountAmount)}</span>
+                    </div>
+                  )}
                   
                   <div className="h-px bg-white/10 my-6"></div>
                   
@@ -224,7 +324,7 @@ const Checkout = () => {
                     <div>
                       <div className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Thanh toán tổng</div>
                       <div className="text-4xl font-black text-white tracking-tighter italic">
-                        {formatCurrency(total)}
+                        {formatCurrency(Math.max(0, total - discountAmount))}
                       </div>
                     </div>
                   </div>

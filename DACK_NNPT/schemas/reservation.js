@@ -39,6 +39,16 @@ let reservationSchema = mongoose.Schema({
         default: "actived"
     },
     expiredIn: Date,
+    promotion: {
+        type: mongoose.Types.ObjectId,
+        ref: 'promotion',
+        default: null
+    },
+    discountAmount: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
     amount: {
         type: Number,
         min: 0
