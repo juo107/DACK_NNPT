@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Dropdown, Menu, Avatar, Space, message, Badge } from 'antd';
 import { UserOutlined, LogoutOutlined, DownOutlined, SearchOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { Search, ShoppingBag, User, Menu as MenuIcon, X, Heart } from 'lucide-react';
 import AuthModal from './AuthModal';
+import authApi from '../api/authApi';
 import useCart from '../hooks/useCart';
 import useWishlist from '../hooks/useWishlist';
 
@@ -35,17 +36,23 @@ const Header = () => {
     return () => window.removeEventListener('openAuthModal', handleOpenAuth);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(async () => {
+    try {
+      if (localStorage.getItem('token')) {
+        await authApi.logout();
+      }
+    } catch {
+      /* vẫn xóa phiên cục bộ nếu token hết hạn */
+    }
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     window.dispatchEvent(new Event('userChanged'));
     setUser(null);
     message.success('Đã đăng xuất!');
-    // Reload để hook useCart nhận biết user đã null và resetting toàn bộ state
     setTimeout(() => {
       window.location.reload();
     }, 500);
-  };
+  }, []);
 
   const userMenuItems = useMemo(() => {
     const baseItems = [
@@ -54,15 +61,22 @@ const Header = () => {
       { key: 'myOrders', label: <Link to="/my-orders">Đơn mua của tôi</Link>, icon: <ShoppingBag className="w-4 h-4" /> },
     ];
 
-    // Chỉ hiện Quản trị nếu là admin
     if (user?.role?.name?.toLowerCase() === 'admin') {
       baseItems.push({ key: 'admin', label: <Link to="/admin/products">Quản trị</Link>, icon: <DownOutlined /> });
     }
 
-    baseItems.push({ key: 'logout', label: 'Đăng xuất', icon: <LogoutOutlined />, danger: true, onClick: handleLogout });
-    
+    baseItems.push({ key: 'logout', label: 'Đăng xuất', icon: <LogoutOutlined />, danger: true });
+
     return baseItems;
-  }, [user, handleLogout]);
+  }, [user]);
+
+  const onUserMenuClick = useCallback(
+    ({ key }) => {
+      if (key === 'profile') navigate('/profile');
+      if (key === 'logout') void handleLogout();
+    },
+    [navigate, handleLogout]
+  );
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100">
@@ -136,9 +150,17 @@ const Header = () => {
 
             <div className="auth-section">
               {user ? (
-                <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
+                <Dropdown
+                  menu={{ items: userMenuItems, onClick: onUserMenuClick }}
+                  placement="bottomRight"
+                  trigger={['click']}
+                >
                   <div className="flex items-center gap-2 cursor-pointer p-1 pr-3 hover:bg-gray-50 rounded-full transition-colors">
-                    <Avatar src={user.avatar} icon={<UserOutlined />} className="bg-primary/10 text-primary border border-primary/20" />
+                    <Avatar
+                      src={user.avatarUrl || user.avatar}
+                      icon={<UserOutlined />}
+                      className="bg-primary/10 text-primary border border-primary/20"
+                    />
                     <span className="text-sm font-semibold hidden md:inline-block text-gray-800">{user.username}</span>
                   </div>
                 </Dropdown>

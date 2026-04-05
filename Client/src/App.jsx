@@ -21,6 +21,7 @@ import Checkout from './pages/Checkout';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import Wishlist from './pages/Wishlist';
+import Profile from './pages/Profile';
 import ChatButton from './components/home/ChatButton';
 
 import AdminLayout from './layouts/AdminLayout';
@@ -50,6 +51,7 @@ function App() {
                         <Route path="/wishlist" element={<Wishlist />} />
                         <Route path="/checkout" element={<Checkout />} />
                         <Route path="/my-orders" element={<MyOrders />} />
+                        <Route path="/profile" element={<Profile />} />
                       </Routes>
                     </main>
                     <Footer />

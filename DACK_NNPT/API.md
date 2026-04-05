@@ -79,8 +79,7 @@
 | ✅ | GET | `/api/v1/auth/me` | CheckLogin |
 | ✅ | POST | `/api/v1/auth/changepassword` | CheckLogin + validator |
 | ✅ | POST | `/api/v1/auth/logout` | CheckLogin |
-| ✅ | POST | `/api/v1/auth/forgotpassword` | |
-| — | POST | `/api/v1/auth/resetpassword/:token` | Có trong code; báo cáo ghi “chưa triển khai” → đánh dấu — |
+| ✅ | POST | `/api/v1/auth/forgotpassword` | Body: `email` — tạo mật khẩu ngẫu nhiên, lưu DB (hash), gửi mật khẩu mới qua email |
 
 ---
 
@@ -91,7 +90,7 @@
 | ✅ | GET | `/api/v1/carts` | CheckLogin |
 | ✅ | POST | `/api/v1/carts/add` | CheckLogin — body: `product`, `quantity` |
 | ✅ | POST | `/api/v1/carts/remove` | CheckLogin — body: `product`, `quantity` |
-| — | POST | `/api/v1/carts/clear` | CheckLogin — xóa toàn bộ item trong giỏ |
+| ✅  | POST | `/api/v1/carts/clear` | CheckLogin — xóa toàn bộ item trong giỏ |
 
 ---
 
@@ -102,7 +101,7 @@
 | ✅ | GET | `/api/v1/wishlists` | CheckLogin |
 | ✅ | POST | `/api/v1/wishlists/add` | CheckLogin — body: `product` |
 | ✅ | POST | `/api/v1/wishlists/remove` | CheckLogin — body: `product` |
-| — | POST | `/api/v1/wishlists/clear` | CheckLogin — xóa toàn bộ item; trả `{ deletedCount }` |
+| ✅ | POST | `/api/v1/wishlists/clear` | CheckLogin — xóa toàn bộ item; trả `{ deletedCount }` |
 
 ---
 

@@ -29,7 +29,13 @@ const authApi = {
   logout: () => {
     const url = '/auth/logout';
     return axiosInstance.post(url);
-  }
+  },
+
+  /** Body: { oldpassword, newpassword } — khớp validator backend (mật khẩu mạnh) */
+  changePassword: (body) => axiosInstance.post('/auth/changepassword', body),
+
+  /** Body: { email } — server tạo mật khẩu mới và gửi email */
+  forgotPassword: (body) => axiosInstance.post('/auth/forgotpassword', body),
 };
 
 export default authApi;

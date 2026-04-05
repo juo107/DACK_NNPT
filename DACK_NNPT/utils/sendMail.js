@@ -10,14 +10,27 @@ const transporter = nodemailer.createTransport({
     },
 });
 
+function escapeHtml(s) {
+    return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
 module.exports = {
-    sendMail: async function (to, url) {
+    /** Gửi mật khẩu mới (plain text) sau khi user dùng quên mật khẩu */
+    sendMail: async function (to, newPassword) {
+        const safe = escapeHtml(newPassword);
         await transporter.sendMail({
             from: "admin@haha.com",
             to: to,
-            subject: "reset password email",
-            text: "click vao day de doi pass",
-            html: 'click vao <a href="' + url + '">day</a> de doi pass',
+            subject: "Mat khau moi - NNPT",
+            text: `Mat khau moi cua ban la: ${newPassword}. Vui long dang nhap va doi mat khau neu can.`,
+            html:
+                "<p>Mật khẩu mới của bạn: <strong>" +
+                safe +
+                "</strong></p><p>Vui lòng đăng nhập và đổi mật khẩu trong trang cá nhân nếu cần.</p>",
         });
     },
 };

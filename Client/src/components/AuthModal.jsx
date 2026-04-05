@@ -65,6 +65,20 @@ const AuthModal = ({ open, onCancel, onLoginSuccess }) => {
     }
   };
 
+  const handleForgot = async (values) => {
+    setLoading(true);
+    setErrorVisible('');
+    try {
+      await authApi.forgotPassword({ email: values.email });
+      message.success('Nếu email tồn tại, hệ thống đã gửi mật khẩu mới. Kiểm tra hộp thư.');
+      setTabKey('login');
+    } catch (error) {
+      setErrorVisible(error.response?.data || 'Gửi yêu cầu thất bại!');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Modal
       title={null}
@@ -72,7 +86,7 @@ const AuthModal = ({ open, onCancel, onLoginSuccess }) => {
       onCancel={onCancel}
       footer={null}
       centered
-      width={400}
+      width={420}
       styles={{ body: { padding: '24px' } }}
     >
       <Tabs
@@ -104,6 +118,43 @@ const AuthModal = ({ open, onCancel, onLoginSuccess }) => {
                 <Button type="primary" htmlType="submit" block size="large" loading={loading}>
                   Đăng nhập
                 </Button>
+                <div className="text-center mt-2">
+                  <button
+                    type="button"
+                    className="text-sm text-primary font-medium hover:underline bg-transparent border-0 cursor-pointer p-0"
+                    onClick={() => handleTabChange('forgot')}
+                  >
+                    Quên mật khẩu?
+                  </button>
+                </div>
+                </Form>
+              </div>
+            ),
+          },
+          {
+            key: 'forgot',
+            label: 'Quên mật khẩu',
+            children: (
+              <div className="space-y-4 pt-2">
+                {errorVisible && tabKey === 'forgot' && (
+                  <Alert message={errorVisible} type="error" showIcon closable className="rounded-xl border-none bg-rose-50 text-rose-600 mb-4" />
+                )}
+                <p className="text-sm text-gray-600 mb-2">
+                  Nhập email đã đăng ký. Hệ thống sẽ tạo mật khẩu mới và gửi vào email.
+                </p>
+                <Form onFinish={handleForgot} layout="vertical">
+                  <Form.Item
+                    name="email"
+                    rules={[
+                      { required: true, message: 'Vui lòng nhập email!' },
+                      { type: 'email', message: 'Email không hợp lệ!' },
+                    ]}
+                  >
+                    <Input prefix={<MailOutlined />} placeholder="Email" size="large" />
+                  </Form.Item>
+                  <Button type="primary" htmlType="submit" block size="large" loading={loading}>
+                    Gửi mật khẩu mới
+                  </Button>
                 </Form>
               </div>
             ),

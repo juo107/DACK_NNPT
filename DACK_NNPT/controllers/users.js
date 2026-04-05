@@ -44,21 +44,6 @@ module.exports = {
             return false;
         }
     },
-    GetUserByToken: async function (token) {
-        try {
-            let user = await userModel
-                .findOne({
-                    isDeleted: false,
-                    forgotPasswordToken: token
-                })
-            if (user.forgotPasswordTokenExp > Date.now()) {
-                return user;
-            }
-            return false;
-        } catch (error) {
-            return false;
-        }
-    },
     QueryLogin: async function (username, password) {
         if (!username || !password) {
             return false;

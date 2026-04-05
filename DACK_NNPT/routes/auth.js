@@ -65,28 +65,27 @@ router.post('/logout', CheckLogin, async function (req, res, next) {
     })
     res.send("logout")
 })
+function generateRandomPassword(length = 12) {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let out = '';
+    for (let i = 0; i < length; i++) {
+        out += chars[crypto.randomInt(0, chars.length)];
+    }
+    return out;
+}
+
 router.post("/forgotpassword", async function (req, res, next) {
     let { email } = req.body;
     let user = await userController.GetUserByEmail(email);
     if (user) {
-        user.forgotPasswordToken = crypto.randomBytes(32).toString('hex');
-        user.forgotPasswordTokenExp = Date.now() + 1000 * 60 * 10;
-        await user.save();
-        let url = "http://localhost:3000/api/v1//auth/resetpassword/" + user.forgotPasswordToken;
-        await sendMail(user.email, url);
-    }
-    res.send("kiem tra mail")
-})
-router.post('/resetpassword/:token', async function (req, res, next) {
-    let { password } = req.body;
-    let user = await userController.GetUserByToken(req.params.token);
-    if (user) {
-        user.password = password;
+        const newPassword = generateRandomPassword(12);
+        user.password = newPassword;
         user.forgotPasswordToken = null;
         user.forgotPasswordTokenExp = null;
-        await user.save()
+        await user.save();
+        await sendMail(user.email, newPassword);
     }
-    res.send("thanh cong")
+    res.send("kiem tra mail")
 })
 
 //forgotpassword
