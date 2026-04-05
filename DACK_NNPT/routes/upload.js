@@ -197,8 +197,7 @@ router.post('/excel', uploadExcel.single('file'), async function (req, res, next
                 continue;
             }// 
 
-            let session = await mongoose.startSession();
-            session.startTransaction()
+            // Không dùng transaction: MongoDB standalone không hỗ trợ (cần replica set/mongos).
             try {
                 let newProduct = new productsModel({
                     sku: sku,
@@ -213,28 +212,24 @@ router.post('/excel', uploadExcel.single('file'), async function (req, res, next
                     description: title,
                     category: categoriesMap.get(category)
                 });
-                newProduct = await newProduct.save({ session });
+                newProduct = await newProduct.save();
                 let newInventory = new inventoryModel({
                     product: newProduct._id,
                     stock: stock
-                })
-                newInventory = await newInventory.save({ session });
-                newInventory = await newInventory.populate('product')
-                await session.commitTransaction();
-                await session.endSession()
+                });
+                newInventory = await newInventory.save();
+                newInventory = await newInventory.populate('product');
                 getTitle.push(title);
-                getSku.push(sku)
+                getSku.push(sku);
                 result.push({
                     success: true,
                     data: newInventory
-                })
+                });
             } catch (error) {
-                await session.abortTransaction();
-                await session.endSession()
                 result.push({
                     success: false,
                     data: error.message
-                })
+                });
             }
 
         }
@@ -242,8 +237,9 @@ router.post('/excel', uploadExcel.single('file'), async function (req, res, next
         res.send(result.map(function (r, index) {
             if (r.success) {
                 return { [index + 1]: r.data }
-            } else {
-                return { [index + 1]: r.data.join(',') }
+            }
+            return {
+                [index + 1]: Array.isArray(r.data) ? r.data.join(',') : r.data
             }
         }))
     }
