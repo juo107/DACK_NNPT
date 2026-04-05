@@ -93,7 +93,6 @@ const FeaturedProducts = () => {
                 
                 <div className="mt-1 flex items-center gap-1">
                   <Rate disabled defaultValue={product.rating} className="text-[10px]" />
-                  <span className="text-xs text-gray-600 ml-1">({Math.floor(Math.random() * 100) + 50})</span>
                 </div>
                 
                 <div className="mt-2 flex items-baseline gap-2">
