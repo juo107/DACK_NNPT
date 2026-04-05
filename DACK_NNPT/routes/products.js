@@ -3,7 +3,7 @@ var router = express.Router();
 let productModel = require('../schemas/products');//dbContext
 let inventoryModel = require('../schemas/inventories')
 let reviewModel = require('../schemas/reviews')
-let { CheckLogin } = require('../utils/authHandler')
+let { CheckLogin, checkRole } = require('../utils/authHandler')
 const { default: slugify } = require('slugify');
 let mongoose = require('mongoose')
 
@@ -163,7 +163,8 @@ router.post('/:id/reviews', CheckLogin, async function (req, res, next) {
   }
 });
 
-router.post('/', async function (req, res, next) {
+// POST create product (Admin only)
+router.post('/', CheckLogin, checkRole('admin'), async function (req, res, next) {
   let session = await mongoose.startSession();
   session.startTransaction()
   try {
@@ -196,7 +197,8 @@ router.post('/', async function (req, res, next) {
     res.send(error.message)
   }
 })
-router.put('/:id', async function (req, res, next) {
+// PUT update product (Admin only)
+router.put('/:id', CheckLogin, checkRole('admin'), async function (req, res, next) {
   try {
     const id = req.params.id;
     const updateData = { ...req.body };
@@ -213,7 +215,8 @@ router.put('/:id', async function (req, res, next) {
   }
 });
 
-router.delete('/:id', async function (req, res, next) {
+// DELETE soft delete product (Admin only)
+router.delete('/:id', CheckLogin, checkRole('admin'), async function (req, res, next) {
   try {
     let id = req.params.id;
     //c1

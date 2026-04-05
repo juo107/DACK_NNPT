@@ -7,9 +7,16 @@ const { Title } = Typography;
 /**
  * Generic Table Component
  */
-const AdminTable = ({ title, columns, apiService, rowKey = '_id', onAdd, onRef }) => {
-  const [data, setData] = useState([]);
+const AdminTable = ({ title, columns, apiService, rowKey = '_id', onAdd, onRef, extra, dataSource }) => {
+  const [data, setData] = useState(dataSource || []);
   const [loading, setLoading] = useState(false);
+
+  // Cập nhật data nếu dataSource từ ngoài thay đổi
+  useEffect(() => {
+    if (dataSource) {
+      setData(dataSource);
+    }
+  }, [dataSource]);
 
   // Hàm lấy dữ liệu chung - Dùng useCallback để tránh render loop
   const fetchData = useCallback(async () => {
@@ -66,19 +73,22 @@ const AdminTable = ({ title, columns, apiService, rowKey = '_id', onAdd, onRef }
       }}>
         <Title level={3} style={{ margin: 0 }}>{title}</Title>
         <Space>
+          {extra}
           <Button 
             icon={<SyncOutlined spin={loading} />} 
             onClick={fetchData}
           >
             Làm mới
           </Button>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />}
-            onClick={onAdd}
-          >
-            Thêm mới
-          </Button>
+          {onAdd && (
+            <Button 
+                type="primary" 
+                icon={<PlusOutlined />}
+                onClick={onAdd}
+            >
+                Thêm mới
+            </Button>
+          )}
         </Space>
       </div>
       

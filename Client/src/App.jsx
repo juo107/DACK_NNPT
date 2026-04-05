@@ -8,6 +8,8 @@ import ProductDetail from './pages/ProductDetail';
 import ProductManagement from './pages/admin/ProductManagement';
 import OrderManagement from './pages/admin/OrderManagement';
 import PromotionManagement from './pages/admin/PromotionManagement';
+import InventoryManagement from './pages/admin/InventoryManagement';
+import CategoryManagement from './pages/admin/CategoryManagement';
 import './App.css';
 
 import MyOrders from './pages/MyOrders';
@@ -23,8 +25,6 @@ import AdminLayout from './layouts/AdminLayout';
 
 // Placeholder components cho Admin
 const Dashboard = () => <h2>Tổng quan hệ thống</h2>;
-const CategoryManagement = () => <h2>Quản lý Danh mục</h2>;
-const InventoryManagement = () => <h2>Quản lý Kho hàng</h2>;
 
 function App() {
   return (

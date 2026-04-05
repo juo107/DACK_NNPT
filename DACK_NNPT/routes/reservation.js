@@ -5,6 +5,7 @@ let reservationModel = require('../schemas/reservation');
 let inventoryModel = require('../schemas/inventories');
 let productModel = require('../schemas/products');
 let promotionModel = require('../schemas/promotions');
+let cartModel = require('../schemas/carts');
 let { CheckLogin, checkRole } = require('../utils/authHandler');
 
 // POST: Tạo đơn đặt hàng mới (Giao dịch thủ công - Không cần Replica Set)
@@ -119,6 +120,13 @@ router.post('/', CheckLogin, async function (req, res) {
             });
 
             await reservation.save();
+
+            // 6. TỰ ĐỘNG XÓA GIỎ HÀNG SAU KHI ĐẶT THÀNH CÔNG
+            await cartModel.findOneAndUpdate(
+                { user: userId },
+                { $set: { items: [] } }
+            );
+
             res.status(201).send(reservation);
 
         } catch (procError) {
@@ -165,19 +173,55 @@ router.get('/admin/all', CheckLogin, checkRole('admin'), async function (req, re
     }
 });
 
-// PUT: Cập nhật trạng thái đơn (Admin)
+// PUT: Cập nhật trạng thái đơn (Admin - Kèm logic cập nhật Kho)
 router.put('/admin/status/:id', CheckLogin, checkRole('admin'), async function (req, res) {
     try {
-        const { status } = req.body;
-        const reservation = await reservationModel.findByIdAndUpdate(
-            req.params.id,
-            { status: status },
+        const { status: newStatus } = req.body;
+        const reservationId = req.params.id;
+
+        // 1. Lấy đơn hàng hiện tại để kiểm tra trạng thái cũ
+        const currentRes = await reservationModel.findById(reservationId);
+        if (!currentRes) return res.status(404).send({ message: "Không tìm thấy đơn hàng" });
+
+        const oldStatus = currentRes.status;
+
+        // Chỉ xử lý nếu trạng thái thực sự thay đổi và trạng thái cũ là 'actived'
+        // (Tránh việc Hủy rồi lại Thanh toán gây sai lệch số liệu kho)
+        if (oldStatus === 'actived' && oldStatus !== newStatus) {
+            
+            // 2. DUYỆT CÁC SẢN PHẨM TRONG ĐƠN ĐỂ CẬP NHẬT KHO
+            for (const item of currentRes.items) {
+                const productId = item.product;
+                const quantity = item.quantity;
+
+                if (newStatus === 'paid') {
+                    // TRƯỜNG HỢP 1: HOÀN TẤT THANH TOÁN (Sold)
+                    // Giảm Reserved đã giữ từ trước, và Tăng SoldCount
+                    await inventoryModel.findOneAndUpdate(
+                        { product: productId },
+                        { $inc: { reserved: -quantity, soldCount: quantity } }
+                    );
+                } else if (newStatus === 'cancelled' || newStatus === 'expired') {
+                    // TRƯỜNG HỢP 2: HỦY ĐƠN / HẾT HẠN
+                    // Giảm Reserved đã giữ, và Trả lại số lượng vào Stock (Tồn kho)
+                    await inventoryModel.findOneAndUpdate(
+                        { product: productId },
+                        { $inc: { reserved: -quantity, stock: quantity } }
+                    );
+                }
+            }
+        }
+
+        // 3. Cập nhật trạng thái mới cho Đơn hàng
+        const updatedReservation = await reservationModel.findByIdAndUpdate(
+            reservationId,
+            { status: newStatus },
             { new: true }
         ).populate('user', 'username email').populate('items.product').populate('promotion');
 
-        if (!reservation) return res.status(404).send({ message: "Không tìm thấy đơn hàng" });
-        res.send(reservation);
+        res.send(updatedReservation);
     } catch (error) {
+        console.error('Update status error:', error);
         res.status(500).send({ message: error.message });
     }
 });

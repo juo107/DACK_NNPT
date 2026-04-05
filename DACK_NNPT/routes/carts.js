@@ -88,4 +88,19 @@ router.post('/remove', CheckLogin, async function (req, res, next) {
     }
 })
 
+// POST: Clear all items from cart
+router.post('/clear', CheckLogin, async function (req, res, next) {
+    try {
+        let user = req.user;
+        let result = await cartModel.findOneAndUpdate(
+            { user: user._id },
+            { $set: { items: [] } },
+            { new: true }
+        );
+        res.send(result);
+    } catch (error) {
+        res.status(500).send({ message: error.message });
+    }
+});
+
 module.exports = router;

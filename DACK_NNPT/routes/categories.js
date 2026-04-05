@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 let categoryModel = require('../schemas/categories');//dbContext
 const { default: slugify } = require('slugify');
+const { CheckLogin, checkRole } = require('../utils/authHandler');
 
 /* GET users listing. */
 router.get('/', async function (req, res, next) {
@@ -27,7 +28,7 @@ router.get('/:id', async function (req, res, next) {
     res.status(404).send({ message: error.message });
   }
 });
-router.post('/', async function (req, res, next) {
+router.post('/', CheckLogin, checkRole('admin'), async function (req, res, next) {
   let newCate = new categoryModel({
     name: req.body.name,
     slug: slugify(req.body.name, {
@@ -40,27 +41,18 @@ router.post('/', async function (req, res, next) {
   await newCate.save();
   res.send(newCate)
 })
-router.put('/:id', async function (req, res, next) {
+// PUT update category (Admin only)
+router.put('/:id', CheckLogin, checkRole('admin'), async function (req, res, next) {
   try {
     let id = req.params.id;
-    //c1
-    // let result = await categoryModel.findOne({
-    //   isDeleted: false,
-    //   _id: id
-    // })
-    // if (result) {
-    //   let keys = Object.keys(req.body);
-    //   for (const key of keys) {
-    //     result[key] = req.body[key]
-    //   }
-    //   await result.save()
-    //   res.send(result)
-    // }
-    // else {
-    //   res.status(404).send({ message: "ID NOT FOUND" });
-    // }
-    //c2
-    let updatedItem = await categoryModel.findByIdAndUpdate(id, req.body, {
+    const updateData = { ...req.body };
+    
+    // Auto-update slug if name changes
+    if (updateData.name) {
+        updateData.slug = slugify(updateData.name, { lower: true });
+    }
+
+    let updatedItem = await categoryModel.findByIdAndUpdate(id, updateData, {
       new: true
     });
     res.send(updatedItem)
@@ -69,7 +61,7 @@ router.put('/:id', async function (req, res, next) {
   }
 });
 
-router.delete('/:id', async function (req, res, next) {
+router.delete('/:id', CheckLogin, checkRole('admin'), async function (req, res, next) {
   try {
     let id = req.params.id;
     //c1

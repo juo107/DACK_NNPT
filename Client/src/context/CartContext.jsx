@@ -119,9 +119,17 @@ export const CartProvider = ({ children }) => {
         }
     };
 
-    const clearCart = () => {
-        localStorage.removeItem(LOCAL_CART_KEY);
-        setItems([]);
+    const clearCart = async () => {
+        try {
+            const currentUser = JSON.parse(localStorage.getItem('user'));
+            if (currentUser) {
+                await cartApi.clear();
+            }
+            localStorage.removeItem(LOCAL_CART_KEY);
+            setItems([]);
+        } catch (error) {
+            console.error('Clear cart failed', error);
+        }
     };
 
     const mergeGuestCart = async () => {
