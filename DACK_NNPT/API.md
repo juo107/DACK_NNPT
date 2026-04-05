@@ -26,7 +26,7 @@
 
 ---
 
-## 3. Products — `/api/v1/products`
+## 3. Products — `/api/v1/products` *
 
 | Method | Đường dẫn | Ghi chú |
 |--------|-----------|---------|
@@ -64,7 +64,7 @@
 
 ---
 
-## 6. Auth — `/api/v1/auth`
+## 6. Auth — `/api/v1/auth` *
 
 | Method | Đường dẫn | Ghi chú |
 |--------|-----------|---------|
@@ -78,7 +78,7 @@
 
 ---
 
-## 7. Carts — `/api/v1/carts`
+## 7. Carts — `/api/v1/carts` *
 
 | Method | Đường dẫn | Auth |
 |--------|-----------|------|
@@ -89,13 +89,14 @@
 
 ---
 
-## 8. Wishlists — `/api/v1/wishlists`
+## 8. Wishlists — `/api/v1/wishlists` *
 
 | Method | Đường dẫn | Auth |
 |--------|-----------|------|
 | GET | `/api/v1/wishlists` | CheckLogin |
 | POST | `/api/v1/wishlists/add` | CheckLogin — body: `product` |
 | POST | `/api/v1/wishlists/remove` | CheckLogin — body: `product` |
+| POST | `/api/v1/wishlists/clear` | CheckLogin — xóa toàn bộ item; trả `{ deletedCount }` |
 
 ---
 

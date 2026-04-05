@@ -76,4 +76,19 @@ router.post('/remove', CheckLogin, async function (req, res, next) {
     res.send("ok")
 })
 
+router.post('/clear', CheckLogin, async function (req, res, next) {
+    let user = req.user
+    let w = await wishlistModel.findOne({
+        user: user._id
+    })
+    if (!w) {
+        res.send({ deletedCount: 0 })
+        return
+    }
+    let result = await wishlistItemModel.deleteMany({
+        wishlist: w._id
+    })
+    res.send({ deletedCount: result.deletedCount })
+})
+
 module.exports = router
