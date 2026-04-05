@@ -33,8 +33,9 @@ module.exports = {
     },
     checkRole: function (...requiredRoles) {
         return function (req, res, next) {
-            let roleOfUser = req.user.role.name;
-            if (requiredRoles.includes(roleOfUser)) {
+            const roleOfUser = String(req.user.role.name || '').toLowerCase();
+            const allowed = requiredRoles.map((r) => String(r).toLowerCase());
+            if (allowed.includes(roleOfUser)) {
                 next();
             } else {
                 res.status(403).send("ban khong co quyen")

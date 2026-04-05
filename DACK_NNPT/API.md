@@ -5,7 +5,7 @@
 
 ---
 
-## Gốc & tĩnh (không có `/api/v1`)
+## 1. Gốc & tĩnh (không có `/api/v1`)
 
 | Method | Đường dẫn | Mô tả (ngắn) |
 |--------|-----------|----------------|
@@ -14,7 +14,7 @@
 
 ---
 
-## Users — `/api/v1/users`
+## 2. Users — `/api/v1/users`
 
 | Method | Đường dẫn | Auth / quyền |
 |--------|-----------|----------------|
@@ -26,7 +26,7 @@
 
 ---
 
-## Products — `/api/v1/products`
+## 3. Products — `/api/v1/products`
 
 | Method | Đường dẫn | Ghi chú |
 |--------|-----------|---------|
@@ -40,7 +40,7 @@
 
 ---
 
-## Categories — `/api/v1/categories`
+## 4. Categories — `/api/v1/categories`
 
 | Method | Đường dẫn |
 |--------|-----------|
@@ -52,7 +52,7 @@
 
 ---
 
-## Roles — `/api/v1/roles`
+## 5. Roles — `/api/v1/roles`
 
 | Method | Đường dẫn |
 |--------|-----------|
@@ -64,7 +64,7 @@
 
 ---
 
-## Auth — `/api/v1/auth`
+## 6. Auth — `/api/v1/auth`
 
 | Method | Đường dẫn | Ghi chú |
 |--------|-----------|---------|
@@ -78,7 +78,7 @@
 
 ---
 
-## Carts — `/api/v1/carts`
+## 7. Carts — `/api/v1/carts`
 
 | Method | Đường dẫn | Auth |
 |--------|-----------|------|
@@ -89,7 +89,7 @@
 
 ---
 
-## Wishlists — `/api/v1/wishlists`
+## 8. Wishlists — `/api/v1/wishlists`
 
 | Method | Đường dẫn | Auth |
 |--------|-----------|------|
@@ -99,7 +99,7 @@
 
 ---
 
-## Upload — `/api/v1/upload`
+## 9. Upload — `/api/v1/upload`
 
 | Method | Đường dẫn | Ghi chú |
 |--------|-----------|---------|
@@ -111,7 +111,7 @@
 
 ---
 
-## Messages — `/api/v1/messages`
+## 10. Messages — `/api/v1/messages`
 
 | Method | Đường dẫn | Auth |
 |--------|-----------|------|
@@ -121,7 +121,7 @@
 
 ---
 
-## Inventories — `/api/v1/inventories`
+## 11. Inventories — `/api/v1/inventories`
 
 | Method | Đường dẫn |
 |--------|-----------|
@@ -134,7 +134,7 @@
 
 ---
 
-## Reservations (đơn đặt hàng) — `/api/v1/reservations`
+## 12. Reservations (đơn đặt hàng) — `/api/v1/reservations`
 
 | Method | Đường dẫn | Auth |
 |--------|-----------|------|
@@ -143,7 +143,7 @@
 
 ---
 
-## Product reviews (theo đơn hàng) — `/api/v1/reviews`
+## 13. Product reviews (theo đơn hàng) — `/api/v1/reviews`
 
 Mount: `app.use('/api/v1/reviews', require('./routes/productReviews'))` — model **`productReviews`**, gắn với **reservation** (`orderId` = `_id` đơn, trạng thái `paid`).
 
