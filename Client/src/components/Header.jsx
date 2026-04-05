@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Dropdown, Menu, Avatar, Space, message, Badge } from 'antd';
 import { UserOutlined, LogoutOutlined, DownOutlined, SearchOutlined, ShoppingCartOutlined } from '@ant-design/icons';
@@ -47,13 +47,22 @@ const Header = () => {
     }, 500);
   };
 
-  const userMenuItems = [
-    { key: 'profile', label: 'Thông tin cá nhân', icon: <UserOutlined /> },
-    { key: 'wishlist', label: <Link to="/wishlist">Yêu thích</Link>, icon: <Heart className="w-4 h-4" /> },
-    { key: 'myOrders', label: <Link to="/my-orders">Đơn mua của tôi</Link>, icon: <ShoppingBag className="w-4 h-4" /> },
-    { key: 'admin', label: <Link to="/admin/products">Quản trị</Link>, icon: <DownOutlined /> },
-    { key: 'logout', label: 'Đăng xuất', icon: <LogoutOutlined />, danger: true, onClick: handleLogout },
-  ];
+  const userMenuItems = useMemo(() => {
+    const baseItems = [
+      { key: 'profile', label: 'Thông tin cá nhân', icon: <UserOutlined /> },
+      { key: 'wishlist', label: <Link to="/wishlist">Yêu thích</Link>, icon: <Heart className="w-4 h-4" /> },
+      { key: 'myOrders', label: <Link to="/my-orders">Đơn mua của tôi</Link>, icon: <ShoppingBag className="w-4 h-4" /> },
+    ];
+
+    // Chỉ hiện Quản trị nếu là admin
+    if (user?.role?.name?.toLowerCase() === 'admin') {
+      baseItems.push({ key: 'admin', label: <Link to="/admin/products">Quản trị</Link>, icon: <DownOutlined /> });
+    }
+
+    baseItems.push({ key: 'logout', label: 'Đăng xuất', icon: <LogoutOutlined />, danger: true, onClick: handleLogout });
+    
+    return baseItems;
+  }, [user, handleLogout]);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100">

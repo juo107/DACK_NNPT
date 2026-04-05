@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 let promotionModel = require('../schemas/promotions');
+let { CheckLogin, checkRole } = require('../utils/authHandler');
 
 // GET all promotions
 router.get('/', async function (req, res, next) {
@@ -16,8 +17,8 @@ router.get('/', async function (req, res, next) {
     }
 });
 
-// GET promotion by ID
-router.get('/:id', async function (req, res, next) {
+// GET promotion by ID (Admin only)
+router.get('/:id', CheckLogin, checkRole('admin'), async function (req, res, next) {
     try {
         let id = req.params.id;
         let result = await promotionModel.findOne({
@@ -34,8 +35,8 @@ router.get('/:id', async function (req, res, next) {
     }
 });
 
-// GET validate promotion code (Dung cho Checkout)
-router.get('/validate/:code', async function (req, res, next) {
+// GET validate promotion code (Dung cho Checkout - Yeu cau dang nhap)
+router.get('/validate/:code', CheckLogin, async function (req, res, next) {
     try {
         let code = req.params.code.toUpperCase();
         let promotion = await promotionModel.findOne({
@@ -71,8 +72,8 @@ router.get('/validate/:code', async function (req, res, next) {
     }
 });
 
-// POST create promotion
-router.post('/', async function (req, res, next) {
+// POST create promotion (Admin only)
+router.post('/', CheckLogin, checkRole('admin'), async function (req, res, next) {
     try {
         let newPromotion = new promotionModel({
             code: req.body.code,
@@ -94,8 +95,8 @@ router.post('/', async function (req, res, next) {
     }
 });
 
-// PUT update promotion
-router.put('/:id', async function (req, res, next) {
+// PUT update promotion (Admin only)
+router.put('/:id', CheckLogin, checkRole('admin'), async function (req, res, next) {
     try {
         let id = req.params.id;
         let updateData = { ...req.body };
@@ -112,8 +113,8 @@ router.put('/:id', async function (req, res, next) {
     }
 });
 
-// DELETE soft delete promotion
-router.delete('/:id', async function (req, res, next) {
+// DELETE soft delete promotion (Admin only)
+router.delete('/:id', CheckLogin, checkRole('admin'), async function (req, res, next) {
     try {
         let id = req.params.id;
         let result = await promotionModel.findByIdAndUpdate(id, {

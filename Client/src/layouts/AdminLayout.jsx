@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Layout, Menu, Button, theme, Avatar, Dropdown, Space } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Layout, Menu, Button, theme, Avatar, Dropdown, Space, message } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -24,8 +24,28 @@ const AdminLayout = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
+  // -- SECURITY GUARD --
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (!savedUser) {
+      message.error('Vui lòng đăng nhập để truy cập trang quản trị!');
+      navigate('/');
+      return;
+    }
+
+    const userObj = JSON.parse(savedUser);
+    const isAdmin = userObj.role?.name?.toLowerCase() === 'admin';
+    
+    if (!isAdmin) {
+      message.error('Bạn không có quyền truy cập vào trang này!');
+      navigate('/');
+    }
+  }, [navigate]);
+
   const handleLogout = () => {
-    // Xử lý đăng xuất (nếu cần) và chuyển về trang quản trị
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    message.success('Đã đăng xuất!');
     navigate('/');
   };
 

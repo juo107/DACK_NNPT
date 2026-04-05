@@ -1,9 +1,10 @@
 var express = require('express');
 var router = express.Router();
 let inventoryModel = require('../schemas/inventories');
+let { CheckLogin, checkRole } = require('../utils/authHandler');
 
-// 1. Get all inventories
-router.get('/', async function (req, res) {
+// 1. Get all inventories (Admin only)
+router.get('/', CheckLogin, checkRole('admin'), async function (req, res) {
     try {
         const result = await inventoryModel.find().populate('product');
         res.send(result);
@@ -12,8 +13,8 @@ router.get('/', async function (req, res) {
     }
 });
 
-// 2. Get inventory by ID
-router.get('/:id', async function (req, res) {
+// 2. Get inventory by ID (Admin only)
+router.get('/:id', CheckLogin, checkRole('admin'), async function (req, res) {
     try {
         const result = await inventoryModel.findById(req.params.id).populate('product');
         if (result) {
@@ -26,8 +27,8 @@ router.get('/:id', async function (req, res) {
     }
 });
 
-// 3. Add stock: {product, quantity}
-router.post('/add-stock', async function (req, res) {
+// 3. Add stock: {product, quantity} (Admin only)
+router.post('/add-stock', CheckLogin, checkRole('admin'), async function (req, res) {
     try {
         const { product, quantity } = req.body;
         const result = await inventoryModel.findOneAndUpdate(
@@ -46,8 +47,8 @@ router.post('/add-stock', async function (req, res) {
     }
 });
 
-// 4. Remove stock: {product, quantity}
-router.post('/remove-stock', async function (req, res) {
+// 4. Remove stock: {product, quantity} (Admin only)
+router.post('/remove-stock', CheckLogin, checkRole('admin'), async function (req, res) {
     try {
         const { product, quantity } = req.body;
         const inv = await inventoryModel.findOne({ product: product });
@@ -68,8 +69,8 @@ router.post('/remove-stock', async function (req, res) {
     }
 });
 
-// 5. Reservation: {product, quantity}
-router.post('/reservation', async function (req, res) {
+// 5. Reservation: {product, quantity} (Admin only)
+router.post('/reservation', CheckLogin, checkRole('admin'), async function (req, res) {
     try {
         const { product, quantity } = req.body;
         const inv = await inventoryModel.findOne({ product: product });
@@ -95,8 +96,8 @@ router.post('/reservation', async function (req, res) {
     }
 });
 
-// 6. Sold: {product, quantity}
-router.post('/sold', async function (req, res) {
+// 6. Sold: {product, quantity} (Admin only)
+router.post('/sold', CheckLogin, checkRole('admin'), async function (req, res) {
     try {
         const { product, quantity } = req.body;
         const inv = await inventoryModel.findOne({ product: product });
