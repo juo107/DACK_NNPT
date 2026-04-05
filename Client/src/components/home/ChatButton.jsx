@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button, Tooltip, Badge, Avatar, Input, Spin } from 'antd';
 import { 
@@ -12,21 +12,28 @@ import {
 } from '@ant-design/icons';
 import { io } from 'socket.io-client';
 import messageApi from '../../api/messageApi';
-import axios from 'axios';
+import axiosInstance from '../../api/axiosInstance';
+import authApi from '../../api/authApi';
 import './ChatButton.css';
 
 const SOCKET_URL = 'http://localhost:3000';
 
-const ChatButton = () => {
-  const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
-  
-  // Ẩn nút chat khi ở trang Admin (Siết chặt logic ẩn)
-  const isAdminPath = location.pathname.startsWith('/admin') || window.location.pathname.includes('/admin');
-  if (isAdminPath) {
+function parseStoredUser() {
+  try {
+    const raw = localStorage.getItem('user');
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
     return null;
   }
+}
 
+const ChatButton = () => {
+  const location = useLocation();
+  const isAdminPath =
+    location.pathname.startsWith('/admin') || window.location.pathname.includes('/admin');
+
+  const [isOpen, setIsOpen] = useState(false);
   const [isChatWindowOpen, setIsChatWindowOpen] = useState(false);
   const [inputText, setInputText] = useState('');
   const [messages, setMessages] = useState([
@@ -43,48 +50,91 @@ const ChatButton = () => {
 
   const socketRef = useRef();
   const messagesEndRef = useRef(null);
+  const isChatWindowOpenRef = useRef(isChatWindowOpen);
+  const loadMessagesRef = useRef(null);
 
-  // 1. Khởi tạo & Kết nối Socket
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
+    isChatWindowOpenRef.current = isChatWindowOpen;
+  }, [isChatWindowOpen]);
+
+  const refreshSession = useCallback(async () => {
     const token = localStorage.getItem('token');
+    if (!token) {
+      setCurrentUser(null);
+      return;
+    }
+    let user = parseStoredUser();
+    if (!user) {
+      try {
+        user = await authApi.getMe();
+        if (user) localStorage.setItem('user', JSON.stringify(user));
+      } catch {
+        user = null;
+      }
+    }
     setCurrentUser(user);
+  }, []);
 
-    if (token) {
-      socketRef.current = io(SOCKET_URL, { auth: { token } });
+  useEffect(() => {
+    refreshSession();
+    const onSessionChange = () => refreshSession();
+    window.addEventListener('userChanged', onSessionChange);
+    window.addEventListener('storage', onSessionChange);
+    return () => {
+      window.removeEventListener('userChanged', onSessionChange);
+      window.removeEventListener('storage', onSessionChange);
+    };
+  }, [refreshSession]);
 
-      socketRef.current.on('newMessage', () => {
-        if (isChatWindowOpen) {
-          loadMessages();
+  // Socket: kết nối theo token, tắt sạch khi logout / đổi phiên
+  useEffect(() => {
+    const connect = () => {
+      const token = localStorage.getItem('token');
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      if (!token) return;
+      const socket = io(SOCKET_URL, { auth: { token } });
+      socketRef.current = socket;
+      socket.on('newMessage', () => {
+        if (isChatWindowOpenRef.current) {
+          loadMessagesRef.current?.();
         }
       });
-    }
+    };
+    connect();
+    window.addEventListener('userChanged', connect);
+    return () => {
+      window.removeEventListener('userChanged', connect);
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, []);
 
-    // Lấy thông tin Admin hỗ trợ (API đã được mở công khai)
+  // Lấy thông tin Admin hỗ trợ (API công khai)
+  useEffect(() => {
     const fetchAdmin = async () => {
       try {
         const response = await axiosInstance.get('/users/support-admin');
         if (response) {
           setAdminUser(response);
-          console.log('Đã kết nối với Admin hỗ trợ:', response.username);
         }
       } catch (err) {
         console.error('LỖI KẾT NỐI ADMIN HỖ TRỢ:', {
           message: err.message,
           response: err.response?.data,
-          status: err.response?.status
+          status: err.response?.status,
         });
       }
     };
     fetchAdmin();
-
-    return () => {
-      if (socketRef.current) socketRef.current.disconnect();
-    };
-  }, [isChatWindowOpen]);
+  }, []);
 
   // 2. Tải lịch sử chat khi mở cửa sổ
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     if (!currentUser || !adminUser) return;
     try {
       setLoading(true);
@@ -97,13 +147,21 @@ const ChatButton = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser, adminUser]);
 
   useEffect(() => {
-    if (isChatWindowOpen && adminUser) {
+    loadMessagesRef.current = loadMessages;
+  }, [loadMessages]);
+
+  useEffect(() => {
+    if (isChatWindowOpen && adminUser && currentUser) {
       loadMessages();
     }
-  }, [isChatWindowOpen, adminUser]);
+  }, [isChatWindowOpen, adminUser, currentUser, loadMessages]);
+
+  useEffect(() => {
+    if (isChatWindowOpen) refreshSession();
+  }, [isChatWindowOpen, refreshSession]);
 
   // 3. Gửi tin nhắn
   const handleSend = async () => {
@@ -176,6 +234,12 @@ const ChatButton = () => {
     },
   ];
 
+  if (isAdminPath) {
+    return null;
+  }
+
+  const canChat = !!currentUser;
+
   return (
     <div className="fixed-chat-container">
       {/* Chat Window */}
@@ -204,7 +268,12 @@ const ChatButton = () => {
             <div className="flex-1 flex items-center justify-center"><Spin /></div>
           ) : (
             messages.map((msg, index) => {
-              const isMine = (msg.from?._id || msg.from) === currentUser?._id;
+              const fromId = msg.from?._id ?? msg.from;
+              const mineId = currentUser?._id;
+              const isMine =
+                fromId != null &&
+                mineId != null &&
+                String(fromId) === String(mineId);
               return (
                 <div key={msg._id || index} className={`flex mb-3 ${isMine ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[80%] p-3 rounded-2xl text-xs font-medium ${
@@ -222,7 +291,7 @@ const ChatButton = () => {
         </div>
 
         <div className="chat-footer p-4 border-t border-slate-100 bg-white shadow-inner">
-          {currentUser ? (
+          {canChat ? (
             <div className="flex gap-2">
               <Input
                 placeholder="Nhập nội dung cần tư vấn..."
@@ -239,8 +308,22 @@ const ChatButton = () => {
               />
             </div>
           ) : (
-            <div className="text-center py-2 italic text-slate-400 text-[10px]">
-              Vui lòng đăng nhập để bắt đầu phiên tư vấn.
+            <div className="flex flex-col items-center gap-2 py-1">
+              <p className="text-center text-slate-500 text-xs m-0 px-1">
+                Đăng nhập để chat với bộ phận hỗ trợ và lưu lịch sử tin nhắn.
+              </p>
+              <Button
+                type="primary"
+                size="small"
+                className="!rounded-xl !bg-primary"
+                onClick={() => {
+                  window.dispatchEvent(new Event('openAuthModal'));
+                  setIsChatWindowOpen(false);
+                  setIsOpen(false);
+                }}
+              >
+                Đăng nhập
+              </Button>
             </div>
           )}
         </div>

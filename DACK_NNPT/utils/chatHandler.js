@@ -15,9 +15,23 @@ module.exports = {
         let user1;
         io.on('connection', async (socket) => {
             let token = socket.handshake.auth.token;
-            let result = jsonwebtoken.verify(token, 'secret');
+            let result;
+            try {
+                if (!token) {
+                    socket.disconnect();
+                    return;
+                }
+                result = jsonwebtoken.verify(token, 'secret');
+            } catch (e) {
+                socket.disconnect();
+                return;
+            }
             if (result.exp * 1000 > Date.now()) {
                 let user = await userSchema.findById(result.id)
+                if (!user) {
+                    socket.disconnect();
+                    return;
+                }
                 user1 = user._id
                 socket.emit('welcome', user.username)
             }

@@ -1,10 +1,6 @@
 const mongoose = require('mongoose');
 const categoryModel = require('./schemas/categories');
 const productModel = require('./schemas/products');
-const roleModel = require('./schemas/roles');
-const userModel = require('./schemas/users');
-const inventoryModel = require('./schemas/inventories');
-const promotionModel = require('./schemas/promotions');
 
 const mongoUrl = 'mongodb://localhost:27017/NNPTUD-C3';
 const USD_TO_VND = 26000;
@@ -303,48 +299,70 @@ const slugify = (text) =>
 
 const toVnd = (usdPrice) => Math.round(Number(usdPrice || 0) * USD_TO_VND);
 
+const DEFAULT_ADMIN_USERNAME = 'admin';
+const DEFAULT_ADMIN_PASSWORD = 'Admin@123456';
+const DEFAULT_ADMIN_EMAIL = 'admin@localhost';
+
+async function seedRolesAndAdmin() {
+  const roleModel = require('./schemas/roles');
+  const userModel = require('./schemas/users');
+  const cartModel = require('./schemas/carts');
+  const wishlistModel = require('./schemas/wishlists');
+
+  const roleDefs = [
+    { name: 'admin', description: 'Quản trị' },
+    { name: 'moderator', description: 'Điều hành' },
+    { name: 'user', description: 'Người dùng' },
+  ];
+
+  const roleByName = {};
+  for (const r of roleDefs) {
+    const doc = await roleModel.findOneAndUpdate(
+      { name: r.name },
+      { $set: { description: r.description, isDeleted: false } },
+      { upsert: true, new: true }
+    );
+    roleByName[r.name] = doc;
+  }
+
+  const adminRoleId = roleByName.admin._id;
+  const username = process.env.SEED_ADMIN_USERNAME || DEFAULT_ADMIN_USERNAME;
+  const password = process.env.SEED_ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD;
+  const email = (process.env.SEED_ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).toLowerCase();
+
+  let adminUser = await userModel.findOne({ username, isDeleted: false });
+  if (!adminUser) {
+    adminUser = new userModel({
+      username,
+      password,
+      email,
+      role: adminRoleId,
+      status: true,
+    });
+    await adminUser.save();
+    await new cartModel({ user: adminUser._id }).save();
+    await new wishlistModel({ user: adminUser._id }).save();
+    console.log(
+      `Seeded admin user: username=${username} email=${email} (password: SEED_ADMIN_PASSWORD or default ${DEFAULT_ADMIN_PASSWORD})`
+    );
+  } else {
+    await userModel.updateOne(
+      { _id: adminUser._id },
+      { $set: { role: adminRoleId, isDeleted: false } }
+    );
+    const hasCart = await cartModel.exists({ user: adminUser._id });
+    const hasWishlist = await wishlistModel.exists({ user: adminUser._id });
+    if (!hasCart) await new cartModel({ user: adminUser._id }).save();
+    if (!hasWishlist) await new wishlistModel({ user: adminUser._id }).save();
+    console.log(`Admin user "${username}" already exists; ensured role admin + cart/wishlist.`);
+  }
+}
+
 async function main() {
   await mongoose.connect(mongoUrl);
 
-  // 1. KHỞI TẠO QUYỀN (ROLES)
-  console.log('Seeding roles...');
-  const adminRole = await roleModel.findOneAndUpdate(
-    { name: 'admin' },
-    { $set: { name: 'admin', description: 'Administrator with full access' } },
-    { upsert: true, returnDocument: 'after' }
-  );
+  await seedRolesAndAdmin();
 
-  const memberRole = await roleModel.findOneAndUpdate(
-    { name: 'member' },
-    { $set: { name: 'member', description: 'Regular customer' } },
-    { upsert: true, returnDocument: 'after' }
-  );
-
-  // 2. KHỞI TẠO TÀI KHOẢN ADMIN MẶC ĐỊNH
-  console.log('Seeding admin user...');
-  let adminUser = await userModel.findOne({ username: 'admin' });
-
-  if (!adminUser) {
-    adminUser = new userModel({
-      username: 'admin',
-      email: 'admin@gmail.com',
-      fullName: 'System Administrator',
-      role: adminRole._id,
-      status: true
-    });
-  }
-
-  adminUser.password = 'admin123'; // Trigger pre('save') hook in users.js
-  adminUser.role = adminRole._id;
-  adminUser.status = true;
-  adminUser.isDeleted = false;
-  adminUser.loginCount = 0;   // Reset login attempts
-  adminUser.lockTime = null;  // Unlock account
-  
-  await adminUser.save();
-  console.log('Admin user seeded and unlocked successfully.');
-
-  // 3. KHỞI TẠO DANH MỤC
   const categoryDocs = [];
   for (const item of categories) {
     const doc = await categoryModel.findOneAndUpdate(
@@ -393,45 +411,9 @@ async function main() {
   await inventoryModel.deleteMany({ product: { $in: insertedProducts.map(p => p._id) } });
   await inventoryModel.insertMany(inventoryDocs);
 
-  // 5. KHỞI TẠO KHUYẾN MÃI
-  console.log('Seeding promotions...');
-  const promotionDocs = [
-    {
-      code: 'WELCOME10',
-      title: 'Chào mừng bạn mới',
-      description: 'Giảm 10% cho đơn hàng đầu tiên',
-      discountType: 'percentage',
-      discountValue: 10,
-      minOrderValue: 0,
-      startDate: new Date(),
-      endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // Hạn 1 năm
-      usageLimit: 1000,
-      status: true
-    },
-    {
-      code: 'FREESHIP',
-      title: 'Miễn phí vận chuyển',
-      description: 'Giảm 50.000đ phí vận chuyển cho đơn từ 500k',
-      discountType: 'fixed',
-      discountValue: 50000,
-      minOrderValue: 500000,
-      startDate: new Date(),
-      endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
-      usageLimit: 500,
-      status: true
-    }
-  ];
-
-  await promotionModel.deleteMany({ code: { $in: promotionDocs.map(p => p.code) } });
-  await promotionModel.insertMany(promotionDocs);
-
   console.log(
-    `Seeded ${categoryDocs.length} categories, ${insertedProducts.length} products, ${promotionDocs.length} promotions, and initialized inventories. (rate: 1 USD = ${USD_TO_VND} VND)`
+    `Seeded ${categoryDocs.length} categories, ${insertedProducts.length} products, and initialized inventories. (rate: 1 USD = ${USD_TO_VND} VND)`
   );
-  console.log('--- ADMIN ACCOUNT CREATED ---');
-  console.log('Username: admin');
-  console.log('Password: admin123');
-  console.log('-----------------------------');
 
   await mongoose.disconnect();
 }
