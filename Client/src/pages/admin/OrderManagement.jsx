@@ -54,8 +54,8 @@ const OrderManagement = () => {
       cancelled: { color: 'error', text: 'Đã hủy' },
       expired: { color: 'warning', text: 'Hết hạn' },
     };
-    const config = statusMap[status] || { color: 'default', text: status };
-    return <Tag color={config.color}>{config.text.toUpperCase()}</Tag>;
+    const config = statusMap[status] || { color: 'default', text: status || 'N/A' };
+    return <Tag color={config.color}>{(config.text || 'N/A').toUpperCase()}</Tag>;
   };
 
   const columns = [
@@ -142,6 +142,10 @@ const OrderManagement = () => {
   }), []);
 
   const itemColumns = useMemo(() => [
+    { title: 'ID Sản phẩm', dataIndex: 'product', key: 'productId', render: (product) => {
+      const productId = typeof product === 'object' ? product?._id : product;
+      return <Text copyable code>{productId}</Text>;
+    }},
     { title: 'Sản phẩm', dataIndex: 'title', key: 'title' },
     { title: 'Số lượng', dataIndex: 'quantity', key: 'quantity', align: 'center' },
     { 
@@ -178,6 +182,8 @@ const OrderManagement = () => {
         loading={loading}
       >
         <Descriptions title="Thông tin giao hàng" bordered column={2} size="small" style={{ marginBottom: '24px' }}>
+          <Descriptions.Item label="ID Đơn hàng"><Text copyable code>{selectedOrder?._id}</Text></Descriptions.Item>
+          <Descriptions.Item label="Trạng thái">{getStatusTag(selectedOrder?.status)}</Descriptions.Item>
           <Descriptions.Item label="Người nhận">{selectedOrder?.shippingInfo?.fullName || 'N/A'}</Descriptions.Item>
           <Descriptions.Item label="Điện thoại">{selectedOrder?.shippingInfo?.phone || 'N/A'}</Descriptions.Item>
           <Descriptions.Item label="Địa chỉ" span={2}>{selectedOrder?.shippingInfo?.address || 'N/A'}</Descriptions.Item>

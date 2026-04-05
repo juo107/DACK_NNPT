@@ -52,6 +52,7 @@ app.use('/api/v1/messages', require('./routes/messages'));
 app.use('/api/v1/promotions', require('./routes/promotions'));
 app.use('/api/v1/inventories', require('./routes/inventories'));
 app.use('/api/v1/reservations', require('./routes/reservation'));
+app.use('/api/v1/reviews', require('./routes/productReviews'));
 const MONGO_URI = 'mongodb://localhost:27017/NNPTUD-C3';
 mongoose.connect(MONGO_URI);
 // Đăng ký model để Mongoose tạo index / dùng được collection wishlists, wishlistitems

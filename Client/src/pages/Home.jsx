@@ -1,18 +1,12 @@
 import React from 'react';
 import Hero from '../components/home/Hero';
 import FeaturedProducts from '../components/home/FeaturedProducts';
-import Promotions from '../components/home/Promotions';
 
 const Home = () => {
   return (
     <main className="min-h-screen bg-[#e3e6e6] overflow-x-hidden pb-12">
       {/* Hero Section with Amazon Style Carousel & Cards */}
       <Hero />
-
-      {/* Promotions Section */}
-      <div className="container mx-auto px-4 mt-6">
-        <Promotions />
-      </div>
 
       {/* Featured Products Section - Now on Gray Background */}
       <div className="container mx-auto px-4">
