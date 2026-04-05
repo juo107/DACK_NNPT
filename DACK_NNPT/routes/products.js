@@ -176,11 +176,11 @@ router.post('/:id/reviews', CheckLogin, async function (req, res, next) {
 });
 
 // POST create product (Admin only)
+// Không dùng transaction: MongoDB standalone (dev) không hỗ trợ; replica set/mongos mới có.
 router.post('/', CheckLogin, checkRole('admin'), async function (req, res, next) {
-  let session = await mongoose.startSession();
-  session.startTransaction()
   try {
     let newProduct = new productModel({
+      sku: req.body.sku,
       title: req.body.title,
       slug: slugify(req.body.title, {
         replacement: '-',
@@ -194,19 +194,15 @@ router.post('/', CheckLogin, checkRole('admin'), async function (req, res, next)
       images: req.body.images,
       status: req.body.status
     });
-    newProduct = await newProduct.save({ session });
+    newProduct = await newProduct.save();
     let newInventory = new inventoryModel({
       product: newProduct._id
-    })
-    newInventory = await newInventory.save({ session });
-    newInventory = await newInventory.populate('product')
-    session.commitTransaction();
-    session.endSession()
-    res.send(newInventory)
+    });
+    newInventory = await newInventory.save();
+    newInventory = await newInventory.populate('product');
+    res.send(newInventory);
   } catch (error) {
-    session.abortTransaction();
-    session.endSession()
-    res.send(error.message)
+    res.status(400).send({ message: error.message });
   }
 })
 // PUT update product (Admin only)
