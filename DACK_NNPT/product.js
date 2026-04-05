@@ -4,12 +4,9 @@ const productModel = require('./schemas/products');
 const roleModel = require('./schemas/roles');
 const userModel = require('./schemas/users');
 const inventoryModel = require('./schemas/inventories');
+const promotionModel = require('./schemas/promotions');
 
-<<<<<<< HEAD
 const mongoUrl = 'mongodb://localhost:27017/NNPTUD-C3';
-=======
-const mongoUrl = 'mongodb://127.0.0.1:27017/NNPTUD-C3';
->>>>>>> 35dd1f2d92f839a2f6034d3da05e3de84a91837d
 const USD_TO_VND = 26000;
 
 const categories = [
@@ -396,8 +393,40 @@ async function main() {
   await inventoryModel.deleteMany({ product: { $in: insertedProducts.map(p => p._id) } });
   await inventoryModel.insertMany(inventoryDocs);
 
+  // 5. KHỞI TẠO KHUYẾN MÃI
+  console.log('Seeding promotions...');
+  const promotionDocs = [
+    {
+      code: 'WELCOME10',
+      title: 'Chào mừng bạn mới',
+      description: 'Giảm 10% cho đơn hàng đầu tiên',
+      discountType: 'percentage',
+      discountValue: 10,
+      minOrderValue: 0,
+      startDate: new Date(),
+      endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // Hạn 1 năm
+      usageLimit: 1000,
+      status: true
+    },
+    {
+      code: 'FREESHIP',
+      title: 'Miễn phí vận chuyển',
+      description: 'Giảm 50.000đ phí vận chuyển cho đơn từ 500k',
+      discountType: 'fixed',
+      discountValue: 50000,
+      minOrderValue: 500000,
+      startDate: new Date(),
+      endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+      usageLimit: 500,
+      status: true
+    }
+  ];
+
+  await promotionModel.deleteMany({ code: { $in: promotionDocs.map(p => p.code) } });
+  await promotionModel.insertMany(promotionDocs);
+
   console.log(
-    `Seeded ${categoryDocs.length} categories, ${insertedProducts.length} products, and initialized inventories. (rate: 1 USD = ${USD_TO_VND} VND)`
+    `Seeded ${categoryDocs.length} categories, ${insertedProducts.length} products, ${promotionDocs.length} promotions, and initialized inventories. (rate: 1 USD = ${USD_TO_VND} VND)`
   );
   console.log('--- ADMIN ACCOUNT CREATED ---');
   console.log('Username: admin');
