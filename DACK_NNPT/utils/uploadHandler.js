@@ -42,6 +42,4 @@ module.exports = {
     }),
     /** Import sản phẩm (.xlsx) */
     uploadExcel: multer(excelUploadOptions),
-    /** Import user (.xlsx) — cùng kiểu file, middleware riêng cho route */
-    uploadExcelUsers: multer(excelUploadOptions),
 }
