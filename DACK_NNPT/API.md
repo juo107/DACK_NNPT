@@ -115,7 +115,7 @@
 
 ---
 
-## 10. Messages — `/api/v1/messages`
+## 10. Messages — `/api/v1/messages`  --- 
 
 | BC | Method | Đường dẫn | Auth |
 |----|--------|-----------|------|
@@ -146,10 +146,8 @@ Mount: `app.use('/api/v1/promotions', require('./routes/promotions'))`.
 |----|--------|-----------|
 | ✅ | GET | `/api/v1/inventories` |
 | ✅ | GET | `/api/v1/inventories/:id` |
-| — | POST | `/api/v1/inventories/add-stock` |
-| — | POST | `/api/v1/inventories/remove-stock` |
-| — | POST | `/api/v1/inventories/reservation` |
-| — | POST | `/api/v1/inventories/sold` |
+| ✅ | POST | `/api/v1/inventories/add-stock` |
+| ✅ | POST | `/api/v1/inventories/remove-stock` |
 
 ---
 
@@ -157,8 +155,8 @@ Mount: `app.use('/api/v1/promotions', require('./routes/promotions'))`.
 
 | BC | Method | Đường dẫn | Auth |
 |----|--------|-----------|------|
-| — | POST | `/api/v1/reservations` | CheckLogin |
-| — | GET | `/api/v1/reservations` | CheckLogin |
+| ✅ | POST | `/api/v1/reservations` | CheckLogin |
+| ✅ | GET | `/api/v1/reservations` | CheckLogin |
 
 ---
 

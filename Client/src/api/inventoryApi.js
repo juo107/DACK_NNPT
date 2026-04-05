@@ -28,18 +28,6 @@ const inventoryApi = {
     const url = '/inventories/remove-stock';
     return axiosInstance.post(url, { product: productId, quantity: Number(quantity) });
   },
-
-  // Reservation: {product, quantity}
-  reservation: (productId, quantity) => {
-    const url = '/inventories/reservation';
-    return axiosInstance.post(url, { product: productId, quantity: Number(quantity) });
-  },
-
-  // Sold: {product, quantity}
-  sold: (productId, quantity) => {
-    const url = '/inventories/sold';
-    return axiosInstance.post(url, { product: productId, quantity: Number(quantity) });
-  }
 };
 
 export default inventoryApi;

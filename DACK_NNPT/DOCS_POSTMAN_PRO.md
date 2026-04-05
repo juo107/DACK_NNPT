@@ -103,7 +103,7 @@ Tài liệu này cung cấp toàn bộ các kịch bản kiểm thử API (Testi
   }
 }
 ```
-> **Logic**: Khi bấm nút này, Backend sẽ gọi lệnh `inventory/reservation`. Bạn hãy chụp ảnh bảng Inventory trước và sau khi đặt hàng để thấy `stock` tự động giảm và `reserved` tự động tăng.
+> **Logic**: `POST /reservations` tự cập nhật kho (giảm `stock`, tăng `reserved`) trong cùng luồng tạo đơn. Chụp ảnh bảng Inventory trước và sau để minh họa.
 
 ### 4.3. Admin Phê duyệt đơn (Update Order Status)
 - **Method**: `PUT` | **URL**: `/reservations/admin/status/ID_ĐƠN_HÀNG`
