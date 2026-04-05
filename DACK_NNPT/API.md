@@ -32,8 +32,8 @@
 |--------|-----------|---------|
 | GET | `/api/v1/products` | Query: `title`, `minprice`, `maxprice` |
 | GET | `/api/v1/products/:id` | Chi tiết + tóm tắt đánh giá (`averageRating`, `reviewCount`) |
-| GET | `/api/v1/products/:id/reviews` | Danh sách review + summary |
-| POST | `/api/v1/products/:id/reviews` | CheckLogin — gửi đánh giá (rating, comment) |
+| GET | `/api/v1/products/:id/reviews` | Danh sách review + summary (collection `reviews`) |
+| POST | `/api/v1/products/:id/reviews` | CheckLogin — gửi đánh giá (`rating`, `comment`) |
 | POST | `/api/v1/products` | Tạo sản phẩm |
 | PUT | `/api/v1/products/:id` | Cập nhật |
 | DELETE | `/api/v1/products/:id` | Xóa mềm |
@@ -85,6 +85,7 @@
 | GET | `/api/v1/carts` | CheckLogin |
 | POST | `/api/v1/carts/add` | CheckLogin — body: `product`, `quantity` |
 | POST | `/api/v1/carts/remove` | CheckLogin — body: `product`, `quantity` |
+| POST | `/api/v1/carts/clear` | CheckLogin — xóa toàn bộ item trong giỏ |
 
 ---
 
@@ -142,18 +143,21 @@
 
 ---
 
-## File `routes/productReviews.js` (chưa mount trong `app.js`)
+## Product reviews (theo đơn hàng) — `/api/v1/reviews`
 
-Các route sau **được định nghĩa** trong `routes/productReviews.js` nhưng **chưa** có `app.use` trong `app.js` tại thời điểm tạo tài liệu này. Để dùng, cần thêm ví dụ:
+Mount: `app.use('/api/v1/reviews', require('./routes/productReviews'))` — model **`productReviews`**, gắn với **reservation** (`orderId` = `_id` đơn, trạng thái `paid`).
 
-`app.use('/api/v1/reviews', require('./routes/productReviews'));`
+| Method | Đường dẫn | Auth | Body / params |
+|--------|-----------|------|----------------|
+| POST | `/api/v1/reviews/add-review` | CheckLogin | JSON: `productId`, `orderId`, `rating`, `comment` |
+| GET | `/api/v1/reviews/product/:productId` | Công khai | Trả `reviews`, `averageRating`, `totalReviews` |
 
-| Method | Đường dẫn (sau khi mount như trên) |
-|--------|-------------------------------------|
-| POST | `/api/v1/reviews/add-review` — CheckLogin |
-| GET | `/api/v1/reviews/product/:productId` |
+**Hai luồng đánh giá trong project:**
 
-Đánh giá sản phẩm hiện có thể dùng qua **`/api/v1/products/:id/reviews`** trong `routes/products.js`.
+- **`/api/v1/products/:id/reviews`** — collection **`reviews`**, không bắt `orderId` (xem `routes/products.js`).
+- **`/api/v1/reviews/...`** — collection **`productReviews`**, bắt buộc đơn hàng đã thanh toán và SP thuộc đơn (xem `routes/productReviews.js`).
+
+Frontend: `reviewApi.js` trỏ tới `/reviews/...` (đúng với base `/api/v1`); `productApi` trỏ tới `/products/:id/reviews`.
 
 ---
 
