@@ -12,6 +12,7 @@ const ProductCard = ({ product, formatCurrency, getImageUrl, onSelectProduct }) 
   const imageUrl = getImageUrl(product);
   const categoryName = product?.category?.name || 'Chưa phân loại';
   const detailPath = `/products/${product?._id}`;
+  const isOutOfStock = product?.stock <= 0;
   const inWishlist = product?._id ? isInWishlist(product._id) : false;
 
   const openDetail = () => {
@@ -35,7 +36,7 @@ const ProductCard = ({ product, formatCurrency, getImageUrl, onSelectProduct }) 
   const handleAddToCartClick = async (event) => {
     event.stopPropagation();
     event.preventDefault();
-    if (!product?._id) return;
+    if (!product?._id || isOutOfStock) return;
     await addItem(product, 1);
   };
 
@@ -50,7 +51,7 @@ const ProductCard = ({ product, formatCurrency, getImageUrl, onSelectProduct }) 
   };
 
   return (
-    <article className="group flex h-full flex-col rounded-[2rem] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)] lg:rounded-2xl">
+    <article className={`group flex h-full flex-col rounded-[2rem] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(15,23,42,0.12)] lg:rounded-2xl ${isOutOfStock ? 'opacity-80' : ''}`}>
       <div
         onClick={openDetail}
         className="block w-full text-left"
@@ -67,7 +68,7 @@ const ProductCard = ({ product, formatCurrency, getImageUrl, onSelectProduct }) 
           <img
             src={imageUrl}
             alt={product?.title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className={`h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? 'grayscale' : ''}`}
             onError={(event) => {
               event.currentTarget.src = '/assets/cat-sneakers.png';
             }}
@@ -83,6 +84,16 @@ const ProductCard = ({ product, formatCurrency, getImageUrl, onSelectProduct }) 
               </Tag>
             )}
           </div>
+
+          {isOutOfStock && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/40 backdrop-blur-[1px]">
+              <div className="rotate-[-15deg]">
+                <span className="text-3xl font-black tracking-widest text-rose-600 lg:text-xl">
+                  HẾT HÀNG
+                </span>
+              </div>
+            </div>
+          )}
 
           <div
             className="absolute inset-x-0 bottom-0 z-10 flex translate-y-full items-center justify-center gap-3 bg-gradient-to-t from-slate-950/80 to-transparent p-5 transition-transform duration-300 group-hover:translate-y-0 lg:gap-2 lg:p-3"
@@ -100,14 +111,16 @@ const ProductCard = ({ product, formatCurrency, getImageUrl, onSelectProduct }) 
                 className={`h-4 w-4 ${inWishlist ? 'fill-rose-500 text-rose-500' : ''}`}
               />
             </button>
-            <button
-              type="button"
-              aria-label="Thêm vào giỏ hàng"
-              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-105 lg:h-9 lg:w-9"
-              onClick={handleAddToCartClick}
-            >
-              <ShoppingBag className="h-4 w-4" />
-            </button>
+            {!isOutOfStock && (
+              <button
+                type="button"
+                aria-label="Thêm vào giỏ hàng"
+                className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-105 lg:h-9 lg:w-9"
+                onClick={handleAddToCartClick}
+              >
+                <ShoppingBag className="h-4 w-4" />
+              </button>
+            )}
             <button
               type="button"
               aria-label={onSelectProduct ? 'Xem nhanh' : 'Xem chi tiết'}

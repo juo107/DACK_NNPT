@@ -59,13 +59,20 @@ router.get('/', async function (req, res, next) {
     path: 'category',
     select: 'name'
   })
-  // result = result.filter(
-  //   function (e) {
-  //     return e.price >= minPrice && e.price <= maxPrice
-  //       && e.title.toLowerCase().includes(titleQ.toLowerCase())
-  //   }
-  // )
-  res.send(result);
+  // Lấy dữ liệu Inventory để map stock vào sản phẩm
+  const inventories = await inventoryModel.find({ 
+    product: { $in: result.map(p => p._id) } 
+  });
+
+  const productsWithStock = result.map(product => {
+    const inv = inventories.find(i => i.product.toString() === product._id.toString());
+    return {
+      ...product.toObject(),
+      stock: inv ? inv.stock : 0
+    };
+  });
+
+  res.send(productsWithStock);
 });
 
 router.get('/:id', async function (req, res, next) {
@@ -76,11 +83,16 @@ router.get('/:id', async function (req, res, next) {
       _id: id
     })
     if (result) {
-      const reviewSummary = await getReviewSummary(id);
+      const [reviewSummary, inventory] = await Promise.all([
+        getReviewSummary(id),
+        inventoryModel.findOne({ product: id })
+      ]);
+
       res.send({
         ...result.toObject(),
         averageRating: reviewSummary.averageRating,
         reviewCount: reviewSummary.reviewCount,
+        stock: inventory ? inventory.stock : 0
       });
     } else {
       res.status(404).send({ message: "ID NOT FOUND" });
