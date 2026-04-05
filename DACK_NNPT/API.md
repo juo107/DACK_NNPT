@@ -30,10 +30,8 @@
 
 | Method | Đường dẫn | Ghi chú |
 |--------|-----------|---------|
-| GET | `/api/v1/products` | Query: `title`, `minprice`, `maxprice` |
+| GET | `/api/v1/products` | Query: `title`, `minprice`, `maxprice` | 
 | GET | `/api/v1/products/:id` | Chi tiết + tóm tắt đánh giá (`averageRating`, `reviewCount`) |
-| GET | `/api/v1/products/:id/reviews` | Danh sách review + summary (collection `reviews`) |
-| POST | `/api/v1/products/:id/reviews` | CheckLogin — gửi đánh giá (`rating`, `comment`) |
 | POST | `/api/v1/products` | Tạo sản phẩm |
 | PUT | `/api/v1/products/:id` | Cập nhật |
 | DELETE | `/api/v1/products/:id` | Xóa mềm |
@@ -152,6 +150,8 @@ Mount: `app.use('/api/v1/reviews', require('./routes/productReviews'))` — mode
 |--------|-----------|------|----------------|
 | POST | `/api/v1/reviews/add-review` | CheckLogin | JSON: `productId`, `orderId`, `rating`, `comment` |
 | GET | `/api/v1/reviews/product/:productId` | Công khai | Trả `reviews`, `averageRating`, `totalReviews` |
+| GET | `/api/v1/products/:id/reviews` | Danh sách review + summary (collection `reviews`) |
+| POST | `/api/v1/products/:id/reviews` | CheckLogin — gửi đánh giá (`rating`, `comment`) |
 
 **Hai luồng đánh giá trong project:**
 
