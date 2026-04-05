@@ -72,13 +72,20 @@ router.get('/', CheckLogin, async function (req, res, next) {
         }
     }
     let result = [];
-    messageMap.forEach(function (value, key) {
+    
+    // Tối ưu: Lấy thông tin user cho danh sách hội thoại
+    const userIds = Array.from(messageMap.keys());
+    const users = await userSchema.find({ _id: { $in: userIds } }).select('username avatarUrl email');
+
+    for (const [userId, lastMessage] of messageMap.entries()) {
+        const userInfo = users.find(u => u._id.toString() === userId);
         result.push({
-            user: key,
-            message: value
-        })
-    })
-    res.send(result)
-})
+            user: userInfo || { _id: userId, username: 'Unknown User' },
+            lastMessage: lastMessage
+        });
+    }
+
+    res.send(result);
+});
 
 module.exports = router;

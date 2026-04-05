@@ -11,6 +11,8 @@ import {
   LogoutOutlined,
   HomeOutlined,
   GiftOutlined,
+  CommentOutlined,
+  StarOutlined,
 } from '@ant-design/icons';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 
@@ -35,7 +37,7 @@ const AdminLayout = () => {
 
     const userObj = JSON.parse(savedUser);
     const isAdmin = userObj.role?.name?.toLowerCase() === 'admin';
-    
+
     if (!isAdmin) {
       message.error('Bạn không có quyền truy cập vào trang này!');
       navigate('/');
@@ -79,6 +81,16 @@ const AdminLayout = () => {
       key: '/admin/inventories',
       icon: <DatabaseOutlined />,
       label: <Link to="/admin/inventories">Kho hàng</Link>,
+    },
+    {
+      key: '/admin/messages',
+      icon: <CommentOutlined />,
+      label: <Link to="/admin/messages">Tư vấn khách</Link>,
+    },
+    {
+      key: '/admin/reviews',
+      icon: <StarOutlined />,
+      label: <Link to="/admin/reviews">Đánh giá</Link>,
     },
   ];
 
@@ -139,7 +151,7 @@ const AdminLayout = () => {
               height: 64,
             }}
           />
-          
+
           <div className="flex items-center gap-4">
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
               <Space className="cursor-pointer hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors">

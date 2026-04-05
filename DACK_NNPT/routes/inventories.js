@@ -3,7 +3,21 @@ var router = express.Router();
 let inventoryModel = require('../schemas/inventories');
 let { CheckLogin, checkRole } = require('../utils/authHandler');
 
-// 1. Get all inventories (Admin only)
+// 1. Get inventory by product ID (Public - Cho phép khách xem stock)
+router.get('/product/:productId', async function (req, res) {
+    try {
+        const result = await inventoryModel.findOne({ product: req.params.productId });
+        if (result) {
+            res.send(result);
+        } else {
+            res.status(404).send({ message: "Không tìm thấy thông tin kho cho sản phẩm này" });
+        }
+    } catch (error) {
+        res.status(500).send({ message: error.message });
+    }
+});
+
+// 2. Get all inventories (Admin only)
 router.get('/', CheckLogin, checkRole('admin'), async function (req, res) {
     try {
         const result = await inventoryModel.find().populate('product');

@@ -12,6 +12,41 @@ router.get("/", CheckLogin, checkRole("ADMIN","MODERATOR"), async function (req,
   res.send(users);
 });
 
+// Route mới: Giúp khách hàng lấy ID Admin để chat hỗ trợ (Công khai cho cả khách chưa đăng nhập)
+router.get("/support-admin", async function (req, res) {
+  try {
+    const users = await userModel.find({ isDeleted: false }).populate('role');
+    
+    // Tìm kiếm linh hoạt hơn: tìm bất kỳ user nào có role là admin hoặc moderator
+    const supportAdmin = users.find(u => {
+      const roleName = u.role?.name?.toLowerCase() || '';
+      return (roleName.includes('admin') || roleName.includes('moderator')) && u.isDeleted === false;
+    });
+    
+    if (supportAdmin) {
+      res.send({
+        _id: supportAdmin._id,
+        username: supportAdmin.username,
+        avatarUrl: supportAdmin.avatarUrl
+      });
+    } else {
+      // Fallback: Lấy user đầu tiên trong danh sách nếu không tìm thấy role cụ thể
+      const fallbackAdmin = users[0];
+      if (fallbackAdmin) {
+        res.send({
+          _id: fallbackAdmin._id,
+          username: fallbackAdmin.username,
+          avatarUrl: fallbackAdmin.avatarUrl
+        });
+      } else {
+        res.status(404).send({ message: "Không tìm thấy tài khoản quản trị nào" });
+      }
+    }
+  } catch (err) {
+    res.status(400).send({ message: err.message });
+  }
+});
+
 router.get("/:id", async function (req, res, next) {
   let result = await userController.GetUserById(
     req.params.id

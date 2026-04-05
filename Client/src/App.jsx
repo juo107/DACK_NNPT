@@ -10,6 +10,8 @@ import OrderManagement from './pages/admin/OrderManagement';
 import PromotionManagement from './pages/admin/PromotionManagement';
 import InventoryManagement from './pages/admin/InventoryManagement';
 import CategoryManagement from './pages/admin/CategoryManagement';
+import CustomerService from './pages/admin/CustomerService';
+import ReviewManagement from './pages/admin/ReviewManagement';
 import './App.css';
 
 import MyOrders from './pages/MyOrders';
@@ -64,6 +66,8 @@ function App() {
                 <Route path="promotions" element={<PromotionManagement />} />
                 <Route path="categories" element={<CategoryManagement />} />
                 <Route path="inventories" element={<InventoryManagement />} />
+                <Route path="messages" element={<CustomerService />} />
+                <Route path="reviews" element={<ReviewManagement />} />
               </Route>
             </Routes>
             <ChatButton />

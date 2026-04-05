@@ -11,13 +11,10 @@ const inventoryApi = {
     return axiosInstance.get(url);
   },
 
-  // Get inventory for a specific product - RE-ADDED to fix product detail page
+  // Get inventory for a specific product (Public Route)
   getByProductId: (productId) => {
-    const url = '/inventories';
-    return axiosInstance.get(url).then(response => {
-      const list = Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []);
-      return list.find(inv => inv.product?._id === productId || inv.product === productId);
-    });
+    const url = `/inventories/product/${productId}`;
+    return axiosInstance.get(url);
   },
 
   // Add stock: {product, quantity}
