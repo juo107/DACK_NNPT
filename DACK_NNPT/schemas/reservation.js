@@ -44,6 +44,10 @@ let reservationSchema = mongoose.Schema({
         ref: 'promotion',
         default: null
     },
+    promotionCode: {
+        type: String,
+        default: null
+    },
     discountAmount: {
         type: Number,
         default: 0,

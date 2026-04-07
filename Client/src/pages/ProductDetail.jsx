@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { Alert, Button, Empty, Form, Input, Rate, Skeleton, Tag, message } from 'antd';
-import { ArrowLeft, Heart, ShoppingBag, Star, CreditCard } from 'lucide-react';
+import { Alert, Button, Dropdown, Empty, Form, Input, Modal, Rate, Skeleton, Tag, message } from 'antd';
+import { ArrowLeft, Heart, ShoppingBag, Star, CreditCard, MoreVertical } from 'lucide-react';
 import useProductDetail from '../hooks/useProductDetail';
 import useCart from '../hooks/useCart';
 import useWishlist from '../hooks/useWishlist';
@@ -22,6 +22,10 @@ const ProductDetail = () => {
     const [wishBusy, setWishBusy] = useState(false);
     const [reviewSubmitting, setReviewSubmitting] = useState(false);
     const [reviewForm] = Form.useForm();
+    const [visibleReviewsCount, setVisibleReviewsCount] = useState(5);
+    const [editingReviewId, setEditingReviewId] = useState(null);
+    const [editingReviewData, setEditingReviewData] = useState({ rating: 5, comment: '' });
+    const [editFormLoading, setEditFormLoading] = useState(false);
     const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
 
     // -- Hooks --
@@ -129,6 +133,44 @@ const ProductDetail = () => {
             message.error(submitError?.response?.data?.message || 'Gửi đánh giá thất bại');
         } finally {
             setReviewSubmitting(false);
+        }
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        Modal.confirm({
+            title: 'Xóa đánh giá',
+            content: 'Bạn có chắc chắn muốn xóa đánh giá này không?',
+            okText: 'Xóa',
+            cancelText: 'Hủy',
+            okButtonProps: { danger: true },
+            onOk: async () => {
+                try {
+                    await productApi.deleteReview(id, reviewId);
+                    message.success('Đánh giá đã được xóa');
+                    await reloadReviews();
+                } catch (err) {
+                    message.error(err?.response?.data?.message || 'Xóa đánh giá thất bại');
+                }
+            },
+        });
+    };
+
+    const handleEditReview = (review) => {
+        setEditingReviewId(review._id);
+        setEditingReviewData({ rating: review.rating, comment: review.comment });
+    };
+
+    const handleSaveEditReview = async () => {
+        try {
+            setEditFormLoading(true);
+            await productApi.updateReview(id, editingReviewId, editingReviewData);
+            message.success('Đánh giá đã được cập nhật');
+            await reloadReviews();
+            setEditingReviewId(null);
+        } catch (err) {
+            message.error(err?.response?.data?.message || 'Cập nhật đánh giá thất bại');
+        } finally {
+            setEditFormLoading(false);
         }
     };
 
@@ -319,18 +361,54 @@ const ProductDetail = () => {
                             {reviews.length === 0 ? (
                                 <Empty description="Chưa có đánh giá nào" />
                             ) : (
-                                reviews.map((item) => (
-                                    <div key={item._id} className="rounded-2xl border border-slate-100 p-4">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div>
-                                                <div className="text-sm font-bold text-slate-900">{item?.user?.username || 'Người dùng'}</div>
-                                                <div className="mt-1"><Rate disabled value={Number(item.rating || 0)} /></div>
+                                <>
+                                    {reviews.slice(0, visibleReviewsCount).map((item) => (
+                                        <div key={item._id} className="rounded-2xl border border-slate-100 p-4">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <div className="text-sm font-bold text-slate-900">{item?.user?.username || 'Người dùng'}</div>
+                                                    <div className="mt-1"><Rate disabled value={Number(item.rating || 0)} /></div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-xs text-slate-400">{new Date(item.createdAt).toLocaleDateString('vi-VN')}</div>
+                                                    {currentUser?._id === item?.user?._id && (
+                                                        <Dropdown
+                                                            menu={{
+                                                                items: [
+                                                                    {
+                                                                        key: 'edit',
+                                                                        label: 'Sửa',
+                                                                        onClick: () => handleEditReview(item),
+                                                                    },
+                                                                    {
+                                                                        key: 'delete',
+                                                                        label: 'Xóa',
+                                                                        danger: true,
+                                                                        onClick: () => handleDeleteReview(item._id),
+                                                                    },
+                                                                ],
+                                                            }}
+                                                            trigger={['click']}
+                                                        >
+                                                            <button className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
+                                                                <MoreVertical className="h-5 w-5 text-slate-400" />
+                                                            </button>
+                                                        </Dropdown>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="text-xs text-slate-400">{new Date(item.createdAt).toLocaleDateString('vi-VN')}</div>
+                                            <p className="mt-3 whitespace-pre-line text-sm text-slate-600">{item.comment || 'Không có nhận xét'}</p>
                                         </div>
-                                        <p className="mt-3 whitespace-pre-line text-sm text-slate-600">{item.comment || 'Không có nhận xét'}</p>
-                                    </div>
-                                ))
+                                    ))}
+                                    {reviews.length > visibleReviewsCount && (
+                                        <button
+                                            onClick={() => setVisibleReviewsCount(reviews.length)}
+                                            className="mt-6 w-full rounded-2xl border-2 border-slate-300 bg-white px-6 py-3 text-center font-bold text-slate-900 transition-all hover:border-slate-400 hover:bg-slate-50"
+                                        >
+                                            Xem thêm ({reviews.length - visibleReviewsCount} đánh giá còn lại)
+                                        </button>
+                                    )}
+                                </>
                             )}
                         </div>
 
@@ -370,6 +448,47 @@ const ProductDetail = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* -- Edit Review Modal -- */}
+                <Modal
+                    title="Sửa đánh giá"
+                    open={editingReviewId !== null}
+                    onCancel={() => setEditingReviewId(null)}
+                    footer={[
+                        <Button key="cancel" onClick={() => setEditingReviewId(null)}>
+                            Hủy
+                        </Button>,
+                        <Button
+                            key="submit"
+                            type="primary"
+                            loading={editFormLoading}
+                            onClick={handleSaveEditReview}
+                            className="!bg-slate-900 hover:!bg-slate-800"
+                        >
+                            Lưu
+                        </Button>,
+                    ]}
+                >
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-bold text-slate-900 mb-2">Số sao</label>
+                            <Rate
+                                value={editingReviewData.rating}
+                                onChange={(val) => setEditingReviewData({ ...editingReviewData, rating: val })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-900 mb-2">Nhận xét</label>
+                            <Input.TextArea
+                                rows={5}
+                                maxLength={500}
+                                value={editingReviewData.comment}
+                                onChange={(e) => setEditingReviewData({ ...editingReviewData, comment: e.target.value })}
+                                placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm..."
+                            />
+                        </div>
+                    </div>
+                </Modal>
 
                 {/* -- Related -- */}
                 <div className="mt-16">

@@ -42,6 +42,18 @@ const productApi = {
     const url = `/products/${id}/reviews`;
     return axiosInstance.post(url, data);
   },
+
+  // Xóa đánh giá sản phẩm
+  deleteReview: (id, reviewId) => {
+    const url = `/products/${id}/reviews/${reviewId}`;
+    return axiosInstance.delete(url);
+  },
+
+  // Cập nhật đánh giá sản phẩm
+  updateReview: (id, reviewId, data) => {
+    const url = `/products/${id}/reviews/${reviewId}`;
+    return axiosInstance.put(url, data);
+  },
 };
 
 export default productApi;

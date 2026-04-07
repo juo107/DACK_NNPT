@@ -114,7 +114,7 @@ router.get('/:id/reviews', async function (req, res, next) {
     }
 
     const reviews = await reviewModel
-      .find({ product: req.params.id, isDeleted: false })
+      .find({ product: req.params.id, isDeleted: { $ne: true } })
       .populate({ path: 'user', select: 'username avatarUrl' })
       .sort({ createdAt: -1 });
 
@@ -168,6 +168,69 @@ router.post('/:id/reviews', CheckLogin, async function (req, res, next) {
     res.send({
       message: 'Danh gia thanh cong',
       review,
+      ...summary,
+    });
+  } catch (error) {
+    res.status(400).send({ message: error.message });
+  }
+});
+
+// DELETE review
+router.delete('/:id/reviews/:reviewId', CheckLogin, async function (req, res, next) {
+  try {
+    const { id, reviewId } = req.params;
+
+    const review = await reviewModel.findOne({
+      _id: reviewId,
+      product: id,
+      user: req.user._id,
+    });
+
+    if (!review) {
+      return res.status(404).send({ message: 'Đánh giá không tồn tại hoặc bạn không có quyền xóa' });
+    }
+
+    review.isDeleted = true;
+    await review.save();
+
+    const summary = await getReviewSummary(id);
+    res.send({ message: 'Đánh giá đã được xóa', ...summary });
+  } catch (error) {
+    res.status(400).send({ message: error.message });
+  }
+});
+
+// PUT update review
+router.put('/:id/reviews/:reviewId', CheckLogin, async function (req, res, next) {
+  try {
+    const { id, reviewId } = req.params;
+    const { rating, comment } = req.body;
+    const ratingValue = Number(rating);
+
+    if (!Number.isInteger(ratingValue) || ratingValue < 1 || ratingValue > 5) {
+      return res.status(400).send({ message: 'rating phai tu 1 den 5' });
+    }
+
+    const review = await reviewModel.findOne({
+      _id: reviewId,
+      product: id,
+      user: req.user._id,
+    });
+
+    if (!review) {
+      return res.status(404).send({ message: 'Đánh giá không tồn tại hoặc bạn không có quyền sửa' });
+    }
+
+    review.rating = ratingValue;
+    review.comment = (comment || '').toString().trim();
+    await review.save();
+
+    const populatedReview = await review.populate({ path: 'user', select: 'username avatarUrl' });
+    const summary = await getReviewSummary(id);
+
+    res.send({
+      message: 'Đánh giá đã được cập nhật',
+      review: populatedReview,
       ...summary,
     });
   } catch (error) {

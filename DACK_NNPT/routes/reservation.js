@@ -112,6 +112,7 @@ router.post('/', CheckLogin, async function (req, res) {
                 user: userId,
                 items: reservationItems,
                 promotion: promotionDoc ? promotionDoc._id : null,
+                promotionCode: promotionDoc ? promotionDoc.code : null,
                 discountAmount: discountAmount,
                 amount: finalAmount,
                 status: 'actived',

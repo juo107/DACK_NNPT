@@ -27,6 +27,10 @@ let productReviewSchema = new mongoose.Schema({
         required: [true, "comment khong duoc rong"],
         maxlength: [1000, "comment khong duoc qua 1000 ky tu"],
         trim: true
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true

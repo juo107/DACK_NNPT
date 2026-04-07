@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Table, Tag, Button, Empty, message, Skeleton } from 'antd';
-import { ShoppingBag, ArrowLeft, Clock } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Clock, Scissors } from 'lucide-react';
 import reservationApi from '../api/reservationApi';
 import { formatCurrency } from '../utils/productHelpers';
 
@@ -62,6 +62,21 @@ const MyOrders = () => {
                 if (status === 'expired') { color = 'orange'; text = 'Hết hạn'; }
                 return <Tag color={color} className="rounded-md px-2 py-0.5 uppercase text-[10px] font-bold">{text}</Tag>;
             },
+        },
+        {
+            title: 'Voucher',
+            dataIndex: 'promotionCode',
+            key: 'promotionCode',
+            render: (code) => (
+                code ? (
+                    <Tag color="success" className="rounded-md px-2 py-0.5 font-semibold">
+                        <Scissors className="w-3 h-3 inline mr-1" />
+                        {code}
+                    </Tag>
+                ) : (
+                    <span className="text-slate-400 text-xs">Không sử dụng</span>
+                )
+            ),
         },
         {
             title: 'Thời hạn giữ hàng',

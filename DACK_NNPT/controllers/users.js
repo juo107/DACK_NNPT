@@ -60,7 +60,10 @@ module.exports = {
                     user.loginCount = 0;
                     await user.save();
                     let token = jwt.sign({
-                        id: user.id
+                        id: user.id,
+                        username: user.username,
+                        email: user.email,
+                        role: user.role?.name || 'user'
                     }, 'secret', {
                         expiresIn: '1d'
                     })
